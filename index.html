@@ -900,32 +900,14 @@ window.onresize=function(){
   });
 };
 
-// 初始化 - 等待echarts加载完成
-function init(){
+// 初始化 - 页面加载完成后执行
+window.onload = function(){
   renderRegionBar();
   renderTabs();
   renderBrandSelector();
   renderNews();
   render();
-}
-// 检查echarts是否加载
-if(typeof echarts !== 'undefined'){
-  init();
-}else{
-  // 等待echarts加载
-  var checkInterval = setInterval(function(){
-    if(typeof echarts !== 'undefined'){
-      clearInterval(checkInterval);
-      echartsLoaded = true;
-      init();
-    }
-  }, 100);
-  // 超时保护：1秒后强制初始化
-  setTimeout(function(){
-    clearInterval(checkInterval);
-    init();
-  }, 1000);
-}
+};
 </script>
 </body>
 </html>
