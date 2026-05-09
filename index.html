@@ -279,6 +279,10 @@ tr:hover{background:#f8f9ff}
           <div class="info-item"><span class="info-label">最高价</span><span class="info-value high">杜邦 46,500</span></div>
         </div>
       </div>
+      <div class="info-footer">
+        <a href="https://www.feishu.cn/base/F0iVbeN7VaU3vasDq67cJGNEn6H" target="_blank" class="info-link">&#x1F310; 查看飞书多维表格</a>
+        <a href="POM市场分析报告_2026年5月.md" target="_blank" class="info-link">&#x1F4C4; 查看完整市场分析报告</a>
+      </div>
     </div>
   </div>
   
@@ -290,6 +294,10 @@ tr:hover{background:#f8f9ff}
     </div>
     <div class="news-content" id="newsContent">
       <div class="news-list" id="newsList"></div>
+      <div class="news-footer">
+        <span class="news-update">更新时间: <span id="newsUpdateTime">-</span></span>
+        <button class="news-refresh" id="refreshBtn" onclick="refreshNews()">&#x1F504; 刷新页面</button>
+      </div>
     </div>
   </div>
   
@@ -534,9 +542,9 @@ function toggleNews(){
   toggle.classList.toggle('collapsed');
 }
 
-// 刷新新闻（提示用户）
+// 刷新页面获取最新数据
 function refreshNews(){
-  alert('新闻数据已嵌入页面，如需最新新闻请运行 scrape_pom_news.py 脚本');
+  location.reload();
 }
 
 function toggleBrand(brand){
@@ -613,8 +621,7 @@ function render(){
 
   document.getElementById('metaInfo').textContent='生成: '+DATA.generated_at+' | 周期: '+(DATA.dates[0]||'')+' ~ '+(DATA.dates[DATA.dates.length-1]||'');
 
-  // 运行时检查 echarts 是否可用
-  if(typeof echarts !== 'undefined'){
+  if(echartsLoaded){
     renderTrendChart();
     renderCompareChart(filtered,minP,maxP);
   }
