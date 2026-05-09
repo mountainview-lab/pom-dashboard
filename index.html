@@ -536,9 +536,9 @@ function toggleNews(){
   toggle.classList.toggle('collapsed');
 }
 
-// 刷新页面获取最新数据
+// 刷新新闻（提示用户）
 function refreshNews(){
-  location.reload();
+  alert('新闻数据已嵌入页面，如需最新新闻请运行 scrape_pom_news.py 脚本');
 }
 
 function toggleBrand(brand){
