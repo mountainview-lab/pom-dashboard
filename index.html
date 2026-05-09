@@ -659,8 +659,8 @@ function renderTrendChart(){
       return h;
     }},
     legend:{data:activeCombos,top:0,type:'scroll',itemWidth:12,itemHeight:8,textStyle:{fontSize:10}},
-    grid:{left:50,right:15,top:50,bottom:25},
-    xAxis:{type:'category',data:DATA.dates,axisLabel:{fontSize:11}},
+    grid:{left:50,right:15,top:50,bottom:60},
+    xAxis:{type:'category',data:DATA.dates,axisLabel:{fontSize:11,interval:0,rotate:45}},
     yAxis:{
       type:'value',
       name:'元/吨',
