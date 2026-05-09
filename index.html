@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>POM 企业价格仪表盘</title>
-<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js" onerror="console.warn('echarts加载失败')"></script>
+<!-- ECharts 图表库 - 主CDN + 备用CDN -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/echarts@5.4.3/dist/echarts.min.js'"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,"Microsoft YaHei","PingFang SC",sans-serif;background:#f0f2f5;color:#333}
@@ -900,14 +901,29 @@ window.onresize=function(){
   });
 };
 
-// 初始化 - 页面加载完成后执行
-window.onload = function(){
+// 初始化函数
+function initDashboard(){
+  console.log('初始化仪表盘...');
   renderRegionBar();
   renderTabs();
   renderBrandSelector();
   renderNews();
   render();
-};
+  console.log('仪表盘初始化完成');
+}
+
+// 多重初始化保障
+if(document.readyState === 'complete'){
+  // 页面已加载完成
+  initDashboard();
+}else{
+  // 等待页面加载
+  window.addEventListener('load', initDashboard);
+  document.addEventListener('DOMContentLoaded', function(){
+    // DOM加载后延迟执行，确保echarts已加载
+    setTimeout(initDashboard, 100);
+  });
+}
 </script>
 </body>
 </html>
