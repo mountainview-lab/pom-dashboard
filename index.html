@@ -296,7 +296,7 @@ tr:hover{background:#f8f9ff}
       <div class="news-list" id="newsList"></div>
       <div class="news-footer">
         <span class="news-update">更新时间: <span id="newsUpdateTime">-</span></span>
-        <button class="news-refresh" onclick="refreshNews()">&#x1F504; 刷新新闻</button>
+        <button class="news-refresh" id="refreshBtn" onclick="refreshNews()">&#x1F504; 刷新页面</button>
       </div>
     </div>
   </div>
@@ -542,9 +542,9 @@ function toggleNews(){
   toggle.classList.toggle('collapsed');
 }
 
-// 刷新新闻（提示用户）
+// 刷新页面获取最新数据
 function refreshNews(){
-  alert('新闻数据已嵌入页面，如需最新新闻请运行 scrape_pom_news.py 脚本');
+  location.reload();
 }
 
 function toggleBrand(brand){
