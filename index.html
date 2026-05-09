@@ -613,7 +613,8 @@ function render(){
 
   document.getElementById('metaInfo').textContent='生成: '+DATA.generated_at+' | 周期: '+(DATA.dates[0]||'')+' ~ '+(DATA.dates[DATA.dates.length-1]||'');
 
-  if(echartsLoaded){
+  // 运行时检查 echarts 是否可用
+  if(typeof echarts !== 'undefined'){
     renderTrendChart();
     renderCompareChart(filtered,minP,maxP);
   }
