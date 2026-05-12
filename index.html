@@ -1,919 +1,501 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>POM 企业价格仪表盘</title>
-<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,"Microsoft YaHei","PingFang SC",sans-serif;background:#f0f2f5;color:#333}
-.header{background:linear-gradient(135deg,#1a73e8,#0d47a1);color:#fff;padding:18px 24px}
-.header h1{font-size:20px;font-weight:600;margin-bottom:6px}
-.header .meta{font-size:12px;opacity:.8}
-.container{max-width:6400px;margin:0 auto;padding:16px}
-/* Tab样式 - 分块布局 */
-.tab-section{background:#fff;border-radius:10px;padding:12px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.tab-section-title{font-size:12px;font-weight:600;color:#666;margin-bottom:8px;padding-left:4px}
-.tab-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.tab-btn{padding:6px 12px;border:none;border-radius:16px;background:#f5f5f5;color:#333;font-size:13px;cursor:pointer;transition:all .2s}
-.tab-btn:hover{background:#e3f2fd}
-.tab-btn.active{background:#1a73e8;color:#fff}
-.tab-btn .count{display:inline-block;margin-left:4px;padding:1px 5px;border-radius:8px;background:rgba(0,0,0,.15);font-size:10px}
-.tab-btn.active .count{background:rgba(255,255,255,.3)}
-/* 市场分类样式 */
-.market-block{border-radius:8px;padding:10px;margin-bottom:8px}
-.market-block-low{background:#e8f5e9;border-left:4px solid #43a047}
-.market-block-mid{background:#fff3e0;border-left:4px solid #fb8c00}
-.market-block-high{background:#ffebee;border-left:4px solid #e53935}
-.market-title{font-size:13px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:6px}
-.market-title-low{color:#2e7d32}
-.market-title-mid{color:#ef6c00}
-.market-title-high{color:#c62828}
-.market-specs{display:flex;gap:6px;flex-wrap:wrap}
-/* 卡片统计 */
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px}
-.card{background:#fff;border-radius:8px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-.card .label{font-size:12px;color:#888;margin-bottom:4px}
-.card .value{font-size:22px;font-weight:700;color:#1a73e8}
-.card .sub{font-size:11px;color:#aaa;margin-top:2px}
-.card .up{color:#e53935}
-.card .down{color:#43a047}
-/* 图表区域 */
-.chart-section{background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:16px}
-.chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #f0f0f0}
-.chart-header h3{font-size:15px;font-weight:600}
-.chart-header .hint{font-size:12px;color:#888}
-/* 企业勾选 */
-.brand-selector{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;padding:10px;background:#fafafa;border-radius:6px}
-.brand-chk{display:flex;align-items:center;gap:4px;padding:4px 10px;background:#fff;border:1px solid #e0e0e0;border-radius:16px;font-size:13px;cursor:pointer;transition:all .15s}
-.brand-chk:hover{border-color:#1a73e8}
-.brand-chk.checked{background:#e3f2fd;border-color:#1a73e8;color:#1a73e8}
-.brand-chk input{display:none}
-.brand-chk .dot{width:8px;height:8px;border-radius:50%;background:#ddd}
-.brand-chk.checked .dot{background:currentColor}
-/* 图表容器 */
-.chart-container{width:100%;height:400px}
-/* 表格 - 优化版 */
-.table-box{background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-.table-box h3{font-size:15px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #eee}
-.table-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
-.table-toolbar input,.table-toolbar select{padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;outline:none;transition:border-color .2s}
-.table-toolbar input:focus,.table-toolbar select:focus{border-color:#1a73e8}
-.table-toolbar input{width:160px}
-.table-toolbar .result-count{font-size:12px;color:#888;margin-left:auto;background:#f5f5f5;padding:4px 10px;border-radius:12px}
-table{width:100%;border-collapse:collapse;table-layout:fixed}
-th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #f0f0f0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-th{background:#f8f9fa;font-weight:600;color:#555;font-size:12px;cursor:pointer;user-select:none;position:sticky;top:0}
-th:hover{background:#e8eaf6}
-th .sort-icon{margin-left:4px;font-size:10px;opacity:.4}
-th .sort-icon.active{opacity:1;color:#1a73e8}
-/* 列宽固定 */
-.col-spec{width:80px}
-.col-brand{width:120px}
-.col-region{width:90px}
-.col-price{width:100px;text-align:right!important}
-.col-change{width:80px;text-align:center!important}
-.col-date{width:105px;white-space:nowrap}
-.col-remark{min-width:80px}
-tr:hover{background:#f8f9ff}
-.highlight{background:#fff9c4!important}
-/* 价格单元格 */
-.price-cell{font-weight:600;font-family:"SF Mono","Consolas",monospace}
-.price-up{color:#e53935}
-.price-down{color:#43a047}
-.price-stable{color:#666}
-.price-lowest{color:#43a047;font-weight:700}
-.price-highest{color:#e53935;font-weight:700}
-/* 涨跌徽章 */
-.badge{display:inline-block;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:600;min-width:50px;text-align:center}
-.badge-up{background:#fce4ec;color:#e53935}
-.badge-down{background:#e8f5e9;color:#43a047}
-.badge-flat{background:#f5f5f5;color:#666}
-/* 规格标签 */
-.spec-tag{display:inline-block;padding:2px 8px;background:#e3f2fd;color:#1565c0;border-radius:4px;font-size:11px;font-weight:600}
-.footer{text-align:center;padding:16px;color:#aaa;font-size:11px}
-/* 新闻模块 */
-.news-section{background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:16px;overflow:hidden}
-.news-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;cursor:pointer;background:#e8f5e9;border-left:4px solid #43a047;transition:all .2s}
-.news-header:hover{background:#c8e6c9}
-.news-header h3{font-size:15px;margin:0;padding:0;border:none;color:#2e7d32}
-.news-toggle{font-size:12px;color:#43a047;transition:transform .3s}
-.news-toggle.collapsed{transform:rotate(-90deg)}
-.news-content{padding:12px 16px;display:block}
-.news-content.collapsed{display:none}
-.news-list{max-height:300px;overflow-y:auto}
-.news-item{padding:10px 0;border-bottom:1px solid #f0f0f0}
-.news-item:last-child{border-bottom:none}
-.news-title{font-size:13px;color:#333;line-height:1.5;margin-bottom:4px}
-.news-title a{color:#1a73e8;text-decoration:none}
-.news-title a:hover{text-decoration:underline}
-.news-meta{font-size:11px;color:#888}
-.news-source{color:#43a047;font-weight:600}
-.news-footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid #eee}
-.news-update{font-size:11px;color:#888}
-.news-refresh{padding:6px 12px;background:#43a047;color:#fff;border:none;border-radius:4px;font-size:12px;cursor:pointer;transition:all .2s}
-.news-refresh:hover{background:#2e7d32}
-/* 行业信息模块 */
-.info-section{background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:16px;overflow:hidden}
-.info-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;cursor:pointer;background:#f8f9fa;border-bottom:1px solid transparent;transition:all .2s}
-.info-header:hover{background:#e8eaf6}
-.info-header h3{font-size:15px;margin:0;padding:0;border:none}
-.info-toggle{font-size:12px;color:#666;transition:transform .3s}
-.info-toggle.collapsed{transform:rotate(-90deg)}
-.info-content{padding:16px;display:block}
-.info-content.collapsed{display:none}
-.info-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.info-card{background:#fafafa;border-radius:8px;padding:12px}
-.info-title{font-size:13px;font-weight:600;color:#333;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e0e0e0}
-.info-item{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:12px}
-.info-label{color:#666}
-.info-value{font-weight:600;color:#333;font-family:monospace}
-.info-value.up{color:#43a047}
-.info-value.down{color:#e53935}
-.info-value.warn{color:#fb8c00}
-.info-value.low{color:#43a047}
-.info-value.high{color:#e53935}
-.info-footer{display:flex;gap:16px;justify-content:center;margin-top:16px;padding-top:12px;border-top:1px solid #eee}
-.info-link{color:#1a73e8;text-decoration:none;font-size:12px;padding:6px 12px;background:#e3f2fd;border-radius:4px;transition:all .2s}
-.info-link:hover{background:#bbdefb}
-@media(max-width:768px){.info-grid{grid-template-columns:repeat(2,1fr)}}
-/* 市场分类 */
-.market-section{background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:16px}
-.market-section h3{font-size:15px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #eee}
-.market-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.market-card{border-radius:8px;padding:12px;background:#fafafa}
-.market-header{font-weight:600;font-size:13px;margin-bottom:4px;display:flex;align-items:center;gap:6px}
-.market-icon{font-size:14px}
-.market-desc{font-size:11px;color:#888;margin-bottom:8px}
-.market-list{font-size:11px;max-height:180px;overflow-y:auto}
-.market-item{padding:4px 6px;margin:2px 0;background:#fff;border-radius:4px;display:flex;justify-content:space-between;align-items:center}
-.market-item:hover{background:#f0f0f0}
-.market-item .name{color:#333}
-.market-item .price{font-weight:600;font-family:monospace}
-.market-low{border-left:3px solid #43a047}
-.market-mid{border-left:3px solid #fb8c00}
-.market-high{border-left:3px solid #e53935}
-.market-low .market-header{color:#43a047}
-.market-mid .market-header{color:#fb8c00}
-.market-high .market-header{color:#e53935}
-@media(max-width:768px){.market-grid{grid-template-columns:1fr}}
-/* 响应式 */
-@media(max-width:768px){
-  .container{padding:10px}
-  .cards{grid-template-columns:repeat(2,1fr)}
-  .chart-container{height:260px}
-  th,td{padding:6px 8px;font-size:12px}
-  .header{padding:14px 16px}
-  .header h1{font-size:17px}
-  .tab-btn{padding:6px 12px;font-size:13px}
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POM聚甲醛价格监控仪表盘</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+                         'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 6400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 30px 20px;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #00d4ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1rem;
+            color: #888;
+            margin-bottom: 15px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #00ff88;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(0, 212, 255, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(180deg, #00d4ff, #00ff88);
+            border-radius: 2px;
+        }
+
+        .chart-container {
+            height: 400px;
+            width: 100%;
+        }
+
+        .news-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .news-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .news-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+
+        .news-container::-webkit-scrollbar-thumb {
+            background: rgba(0, 212, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .news-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .news-item:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: rgba(0, 212, 255, 0.3);
+            transform: translateX(5px);
+        }
+
+        .news-number {
+            width: 28px;
+            height: 28px;
+            line-height: 28px;
+            text-align: center;
+            background: linear-gradient(135deg, #00d4ff, #00ff88);
+            color: #1a1a2e;
+            font-weight: 700;
+            font-size: 0.85rem;
+            border-radius: 50%;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .news-title {
+            flex: 1;
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 1rem;
+            line-height: 1.5;
+            transition: color 0.3s ease;
+        }
+
+        .news-title:hover {
+            color: #00d4ff;
+        }
+
+        .news-source {
+            margin-left: 15px;
+            padding: 4px 12px;
+            background: rgba(0, 212, 255, 0.15);
+            color: #00d4ff;
+            font-size: 0.8rem;
+            border-radius: 20px;
+            flex-shrink: 0;
+        }
+
+        .no-news {
+            text-align: center;
+            color: #666;
+            padding: 40px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .footer a {
+            color: #00d4ff;
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .stats {
+                gap: 20px;
+            }
+
+            .stat-value {
+                font-size: 1.5rem;
+            }
+
+            .news-source {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body>
-<div class="header">
-  <h1>&#x1F4CA; POM 企业价格仪表盘</h1>
-  <div class="meta" id="metaInfo"></div>
-</div>
-<div class="container">
-  <!-- 市场分类选择器 -->
-  <div class="tab-section" id="marketSelector">
-    <div class="tab-section-title">&#x1F4CA; 市场定位筛选</div>
-    <div class="tab-row">
-      <button class="tab-btn active" onclick="switchSpec('')">&#x1F4CA; 全部 <span class="count">25</span></button>
-      <button class="tab-btn" onclick="switchMarket('low')">&#x25CF; 低端 <span class="count">12</span></button>
-      <button class="tab-btn" onclick="switchMarket('mid')">&#x25CF; 中端 <span class="count">8</span></button>
-      <button class="tab-btn" onclick="switchMarket('high')">&#x25CF; 高端 <span class="count">5</span></button>
-    </div>
-  </div>
-  
-  <!-- 区域筛选 -->
-  <div class="tab-section" id="regionSelector">
-    <div class="tab-section-title">&#x1F4CD; 区域筛选</div>
-    <div class="tab-row" id="regionBar"></div>
-  </div>
-  
-  <!-- 规格选择器 -->
-  <div class="tab-section" id="specSelector">
-    <div class="tab-section-title">&#x1F3F7;️ 产品规格</div>
-    <div class="tab-row" id="tabBar"></div>
-  </div>
-  
-  <!-- 统计卡片 -->
-  <div class="cards" id="cards"></div>
-  
-  <!-- 价格走势图 -->
-  <div class="chart-section">
-    <div class="chart-header">
-      <h3>&#x1F4C8; 企业价格走势</h3>
-      <span class="hint" id="chartHint">点击企业名称可显示/隐藏</span>
-    </div>
-    <div class="chart-container" id="trendChart"></div>
-    <div class="brand-selector" id="brandSelector"></div>
-  </div>
-  
-  <!-- 最新价格对比 -->
-  <div class="chart-section">
-    <div class="chart-header">
-      <h3>&#x1F4CF; 最新价格对比</h3>
-    </div>
-    <div class="chart-container" id="compareChart" style="height:400px"></div>
-  </div>
-  
-  <!-- 市场分类展示 -->
-  <div class="market-section">
-    <h3>&#x1F4CA; 市场定位分类</h3>
-    <div class="market-grid">
-      <div class="market-card market-low">
-        <div class="market-header"><span class="market-icon">&#x1F7E2;</span> 低端市场</div>
-        <div class="market-desc">&lt; 13,000 元/吨</div>
-        <div class="market-list" id="marketLow"></div>
-      </div>
-      <div class="market-card market-mid">
-        <div class="market-header"><span class="market-icon">&#x1F7E1;</span> 中端市场</div>
-        <div class="market-desc">13,000 - 16,000 元/吨</div>
-        <div class="market-list" id="marketMid"></div>
-      </div>
-      <div class="market-card market-high">
-        <div class="market-header"><span class="market-icon">&#x1F534;</span> 高端市场</div>
-        <div class="market-desc">&gt;= 16,000 元/吨</div>
-        <div class="market-list" id="marketHigh"></div>
-      </div>
-    </div>
-  </div>
-  
-  <!-- POM行业信息 -->
-  <div class="info-section">
-    <div class="info-header" onclick="toggleInfo()">
-      <h3>&#x1F4D6; POM行业信息</h3>
-      <span class="info-toggle" id="infoToggle">&#x25BC;</span>
-    </div>
-    <div class="info-content" id="infoContent">
-      <div class="info-grid">
-        <div class="info-card">
-          <div class="info-title">&#x1F3E2; 产能数据</div>
-          <div class="info-item"><span class="info-label">全国总产能</span><span class="info-value">76万吨/年</span></div>
-          <div class="info-item"><span class="info-label">兖矿鲁南</span><span class="info-value">8→14万吨(扩产中)</span></div>
-          <div class="info-item"><span class="info-label">新疆心连心</span><span class="info-value">6万吨(在建)</span></div>
-          <div class="info-item"><span class="info-label">南通宝理</span><span class="info-value">9万吨(新投产)</span></div>
+    <div class="container">
+        <div class="header">
+            <h1>POM聚甲醛价格监控仪表盘</h1>
+            <p class="subtitle">Polyoxymethylene Market Price Dashboard</p>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value">9</div>
+                    <div class="stat-label">数据天数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">25</div>
+                    <div class="stat-label">监测品牌</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">10</div>
+                    <div class="stat-label">行业资讯</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">2026-05-09 09:20:40</div>
+                    <div class="stat-label">更新时间</div>
+                </div>
+            </div>
         </div>
-        <div class="info-card">
-          <div class="info-title">&#x1F4C8; 市场趋势</div>
-          <div class="info-item"><span class="info-label">进口下降</span><span class="info-value down">-36.58%</span></div>
-          <div class="info-item"><span class="info-label">国产替代</span><span class="info-value up">加速中</span></div>
-          <div class="info-item"><span class="info-label">出口扩张</span><span class="info-value up">转型期</span></div>
-          <div class="info-item"><span class="info-label">技术封锁</span><span class="info-value warn">杜邦/塞拉尼斯</span></div>
+
+        <div class="section">
+            <h2 class="section-title">价格趋势分析</h2>
+            <div id="trend-chart" class="chart-container"></div>
         </div>
-        <div class="info-card">
-          <div class="info-title">&#x1F4E5; 下游应用</div>
-          <div class="info-item"><span class="info-label">电子电器</span><span class="info-value">40%</span></div>
-          <div class="info-item"><span class="info-label">日用消费品</span><span class="info-value">28%</span></div>
-          <div class="info-item"><span class="info-label">汽车</span><span class="info-value">23.8%</span></div>
-          <div class="info-item"><span class="info-label">工业机械</span><span class="info-value">5.1%</span></div>
+
+        <div class="section">
+            <h2 class="section-title">企业最新价格对比</h2>
+            <div id="brand-chart" class="chart-container"></div>
         </div>
-        <div class="info-card">
-          <div class="info-title">&#x1F4CA; 价格分析</div>
-          <div class="info-item"><span class="info-label">价格区间</span><span class="info-value">12,000-46,500</span></div>
-          <div class="info-item"><span class="info-label">市场均价</span><span class="info-value">15,856元/吨</span></div>
-          <div class="info-item"><span class="info-label">最低价</span><span class="info-value low">新疆国业 12,000</span></div>
-          <div class="info-item"><span class="info-label">最高价</span><span class="info-value high">杜邦 46,500</span></div>
+
+        <div class="section">
+            <h2 class="section-title">行业最新资讯</h2>
+            <div class="news-container">
+                
+            <div class="news-item">
+                <span class="news-number">1</span>
+                <a href="https://www.toutiao.com/article/7600625889033994802" target="_blank" class="news-title">2026年中国聚甲醛行业供需现状、市场规模及前景展望</a>
+                <span class="news-source">今日头条</span>
+            </div>
+        
+            <div class="news-item">
+                <span class="news-number">2</span>
+                <a href="https://www.toutiao.com/article/7600626353523737138" target="_blank" class="news-title">2026年中国聚甲醛行业产业链、进出口现状及竞争格局分析</a>
+                <span class="news-source">今日头条</span>
+            </div>
+        
+            <div class="news-item">
+                <span class="news-number">3</span>
+                <a href="https://www.toutiao.com/article/7411029314491220507" target="_blank" class="news-title">中国聚甲醛行业市场运行动态及投资前景预测报告</a>
+                <span class="news-source">今日头条</span>
+            </div>
+        
+            <div class="news-item">
+                <span class="news-number">4</span>
+                <a href="https://m.sohu.com/a/883530260_122006510" target="_blank" class="news-title">2025深圳橡塑展:聚甲醛POM行业新动向一览</a>
+                <span class="news-source">搜狐</span>
+            </div>
+        
+            <div class="news-item">
+                <span class="news-number">5</span>
+                <a href="https://m.sohu.com/a/873217926_122006510" target="_blank" class="news-title">利华益8万吨/年聚甲醛项目环评获批，国内POM总产能将破92万吨</a>
+                <span class="news-source">搜狐</span>
+            </div>
+        
+            <div class="news-item">
+                <span class="news-number">6</span>
+                <a href="https://www.toutiao.com/article/7264946043995931195" target="_blank" class="news-title">POM供应收紧单月涨超10% 云天化透露"现存货不多但无扩产计划"</a>
+                <span class="news-source">今日头条</span>
+            </div>
+        
+            <div class="news-item">
+                <span class="news-number">7</span>
+                <a href="https://www.toutiao.com/article/7200926067107070468" target="_blank" class="news-title">POM 生产技术及改性研究进展</a>
+                <span class="news-source">今日头条</span>
+            </div>
+        
+            <div class="news-item">
+                <span class="news-number">8</span>
+                <a href="https://www.toutiao.com/article/7080756909938311693" target="_blank" class="news-title">4月1日起，每吨涨600美元!拟建的百万吨聚甲醛能否解高端需求之困?</a>
+                <span class="news-source">今日头条</span>
+            </div>
+        
+            <div class="news-item">
+                <span class="news-number">9</span>
+                <a href="https://finance.sina.com.cn/roll/2024-03-06/doc-inamkitk8788674.shtml" target="_blank" class="news-title">2024年全球聚甲醛行业发展现状分析 中国聚甲醛总体产能位居全球第一</a>
+                <span class="news-source">新浪财经</span>
+            </div>
+        
+            <div class="news-item">
+                <span class="news-number">10</span>
+                <a href="https://finance.sina.com.cn/roll/2025-08-12/doc-infksvhf8924810.shtml" target="_blank" class="news-title">590亿元大型化工项目关键装置封顶!涉及EVA、PVA、POM</a>
+                <span class="news-source">新浪财经</span>
+            </div>
+        
+            </div>
         </div>
-      </div>
-      <div class="info-footer">
-        <a href="https://www.feishu.cn/base/F0iVbeN7VaU3vasDq67cJGNEn6H" target="_blank" class="info-link">&#x1F310; 查看飞书多维表格</a>
-        <a href="POM市场分析报告_2026年5月.md" target="_blank" class="info-link">&#x1F4C4; 查看完整市场分析报告</a>
-      </div>
+
+        <div class="footer">
+            <p>数据来源: POM聚甲醛价格监控系统 | 更新时间: 2026-05-09 09:20:40</p>
+        </div>
     </div>
-  </div>
-  
-  <!-- POM行业新闻 -->
-  <div class="news-section">
-    <div class="news-header" onclick="toggleNews()">
-      <h3>&#x1F4F0; POM行业最新资讯</h3>
-      <span class="news-toggle" id="newsToggle">&#x25BC;</span>
-    </div>
-    <div class="news-content" id="newsContent">
-      <div class="news-list" id="newsList"></div>
-      <div class="news-footer">
-        <span class="news-update">更新时间: <span id="newsUpdateTime">-</span></span>
-        <button class="news-refresh" onclick="refreshNews()">&#x1F504; 刷新新闻</button>
-      </div>
-    </div>
-  </div>
-  
-  <!-- 价格明细表 -->
-  <div class="table-box">
-    <h3>&#x1F4CB; 最新价格明细</h3>
-    <div class="table-toolbar">
-      <input type="text" id="tableSearch" placeholder="&#x1F50D; 搜索..." oninput="filterTable()">
-      <select id="regionFilter" onchange="filterTable()"><option value="">全部地区</option></select>
-      <select id="priceFilter" onchange="filterTable()">
-        <option value="">全部</option><option value="up">&#x25B2; 涨价</option><option value="down">&#x25BE; 降价</option><option value="flat">&#x2192; 持平</option>
-      </select>
-      <span class="result-count" id="resultCount"></span>
-    </div>
-    <table>
-      <thead><tr>
-        <th class="col-brand" onclick="sortTable('brand')">企业 <span class="sort-icon" id="sort_brand">&#x25B4;&#x25BE;</span></th>
-        <th class="col-spec" onclick="sortTable('specification')">规格 <span class="sort-icon" id="sort_specification">&#x25B4;&#x25BE;</span></th>
-        <th class="col-region" onclick="sortTable('region')">地区 <span class="sort-icon" id="sort_region">&#x25B4;&#x25BE;</span></th>
-        <th class="col-price" onclick="sortTable('price_avg')">价格 <span class="sort-icon" id="sort_price_avg">&#x25B4;&#x25BE;</span></th>
-        <th class="col-change" onclick="sortTable('change')">涨跌 <span class="sort-icon" id="sort_change">&#x25B4;&#x25BE;</span></th>
-        <th class="col-date" onclick="sortTable('price_date')">日期 <span class="sort-icon" id="sort_price_date">&#x25B4;&#x25BE;</span></th>
-        <th class="col-remark">备注</th>
-      </tr></thead>
-      <tbody id="tableBody"></tbody>
-    </table>
-  </div>
-</div>
-<div class="footer">数据来源：隆众资讯网 | POM 企业价格监控 | 可离线查看</div>
-<script>
-var DATA={"latest": [{"brand": "杜邦", "specification": "100P", "region": "国外", "price_date": "2026/05/11", "price_avg": 46500.0, "price_text": "46500", "remark": "现金送到"}, {"brand": "张家港旭化成", "specification": "4520", "region": "华东地区", "price_date": "2026/05/11", "price_avg": 15000.0, "price_text": "15000", "remark": "现金送到"}, {"brand": "杜邦", "specification": "500P", "region": "国外", "price_date": "2026/05/11", "price_avg": 38500.0, "price_text": "38500", "remark": "现金送到"}, {"brand": "塞拉尼斯", "specification": "CE66", "region": "国外", "price_date": "2026/05/11", "price_avg": 13000.0, "price_text": "13000", "remark": "现金送到"}, {"brand": "韩国工程", "specification": "F20-03", "region": "国外", "price_date": "2026/05/11", "price_avg": 16000.0, "price_text": "16000", "remark": "现金送到"}, {"brand": "云天化集团", "specification": "GM90", "region": "西南地区", "price_date": "2026/05/11", "price_avg": 14100.0, "price_text": "14100", "remark": "现汇送到"}, {"brand": "韩国可隆", "specification": "K300", "region": "国外", "price_date": "2026/05/11", "price_avg": 15000.0, "price_text": "15000", "remark": "现金送到"}, {"brand": "唐山中浩", "specification": "K90", "region": "华北地区", "price_date": "2026/05/11", "price_avg": 11700.0, "price_text": "11700", "remark": "承兑送到"}, {"brand": "唐山中浩", "specification": "K90-1", "region": "华北地区", "price_date": "2026/05/11", "price_avg": 11900.0, "price_text": "11900", "remark": "承兑送到"}, {"brand": "唐山中浩", "specification": "K90-A", "region": "华北地区", "price_date": "2026/05/11", "price_avg": 12100.0, "price_text": "12100", "remark": "承兑送到"}, {"brand": "云天化集团", "specification": "M270", "region": "西南地区", "price_date": "2026/05/11", "price_avg": 14800.0, "price_text": "14800", "remark": "现汇送到"}, {"brand": "中油内蒙", "specification": "M90", "region": "西北地区", "price_date": "2026/05/11", "price_avg": 11800.0, "price_text": "11800", "remark": "现汇送到"}, {"brand": "兖矿鲁南", "specification": "M90", "region": "华东地区", "price_date": "2026/05/11", "price_avg": 12200.0, "price_text": "12200", "remark": "现汇送到"}, {"brand": "云天化集团", "specification": "M90", "region": "西南地区", "price_date": "2026/05/11", "price_avg": 14800.0, "price_text": "14800", "remark": "现汇送到"}, {"brand": "塞拉尼斯", "specification": "M90", "region": "国外", "price_date": "2026/05/11", "price_avg": 16000.0, "price_text": "16000", "remark": "现金送到"}, {"brand": "新疆国业", "specification": "M90-1", "region": "西北地区", "price_date": "2026/05/11", "price_avg": 12000.0, "price_text": "12000", "remark": "现汇送到"}, {"brand": "南通大宝理", "specification": "M90-44", "region": "华东地区", "price_date": "2026/05/11", "price_avg": 17800.0, "price_text": "17800", "remark": "现金送到"}, {"brand": "兖矿鲁南", "specification": "MA90", "region": "华东地区", "price_date": "2026/05/11", "price_avg": 12200.0, "price_text": "12200", "remark": "现汇送到"}, {"brand": "神华宁煤", "specification": "MC90", "region": "西北地区", "price_date": "2026/05/11", "price_avg": 11400.0, "price_text": "11400", "remark": "现汇自提"}, {"brand": "开封龙宇", "specification": "MC90", "region": "华中地区", "price_date": "2026/05/11", "price_avg": 12300.0, "price_text": "12300", "remark": "现汇送到"}, {"brand": "天津碱厂", "specification": "MC90", "region": "华北地区", "price_date": "2026/05/11", "price_avg": 12600.0, "price_text": "12600", "remark": "现汇送到"}, {"brand": "开封龙宇", "specification": "MC90-01", "region": "华中地区", "price_date": "2026/05/11", "price_avg": 12100.0, "price_text": "12100", "remark": "现汇送到"}, {"brand": "巴斯夫中国", "specification": "N2320-0038", "region": "国外", "price_date": "2026/05/11", "price_avg": 13000.0, "price_text": "13000", "remark": "现金送到"}, {"brand": "新疆心连心", "specification": "X90", "region": "西北地区", "price_date": "2026/05/11", "price_avg": 12300.0, "price_text": "12300", "remark": "现汇送到"}, {"brand": "新疆心连心", "specification": "X90-01", "region": "西北地区", "price_date": "2026/05/11", "price_avg": 12100.0, "price_text": "12100", "remark": "现汇送到"}], "trend": [{"brand": "中油内蒙", "price_date": "2026/04/28", "price_avg": 12800.0, "price_text": "12800", "remark": "元/吨", "specification": "M90", "region": "西北地区"}, {"brand": "云天化集团", "price_date": "2026/04/28", "price_avg": 14600.0, "price_text": "14600", "remark": "元/吨", "specification": "M90", "region": "西南地区"}, {"brand": "兖矿鲁南", "price_date": "2026/04/28", "price_avg": 12200.0, "price_text": "12200", "remark": "元/吨", "specification": "M90", "region": "华东地区"}, {"brand": "南通大宝理", "price_date": "2026/04/28", "price_avg": 16300.0, "price_text": "16300", "remark": "元/吨", "specification": "M90-44", "region": "华东地区"}, {"brand": "唐山中浩", "price_date": "2026/04/28", "price_avg": 12400.0, "price_text": "12400", "remark": "元/吨", "specification": "K90", "region": "华北地区"}, {"brand": "塞拉尼斯", "price_date": "2026/04/28", "price_avg": 16000.0, "price_text": "16000", "remark": "元/吨", "specification": "M90", "region": "华东地区"}, {"brand": "天津碱厂", "price_date": "2026/04/28", "price_avg": 12600.0, "price_text": "12600", "remark": "元/吨", "specification": "MC90", "region": "华北地区"}, {"brand": "开封龙宇", "price_date": "2026/04/28", "price_avg": 13000.0, "price_text": "13000", "remark": "元/吨", "specification": "MC90", "region": "华中地区"}, {"brand": "新疆心连心", "price_date": "2026/04/28", "price_avg": 12100.0, "price_text": "12100", "remark": "元/吨", "specification": "X90", "region": "西北地区"}, {"brand": "神华宁煤", "price_date": "2026/04/28", "price_avg": 12100.0, "price_text": "12100", "remark": "元/吨", "specification": "MC90", "region": "西北地区"}, {"brand": "中油内蒙", "price_date": "2026/04/29", "price_avg": 12800.0, "price_text": "12800", "remark": "", "specification": "M90", "region": "西北地区"}, {"brand": "云天化集团", "price_date": "2026/04/29", "price_avg": 14800.0, "price_text": "14800", "remark": "", "specification": "M270", "region": "西南地区"}, {"brand": "云天化集团", "price_date": "2026/04/29", "price_avg": 14100.0, "price_text": "14100", "remark": "", "specification": "GM90", "region": "西南地区"}, {"brand": "云天化集团", "price_date": "2026/04/29", "price_avg": 14800.0, "price_text": "14800", "remark": "", "specification": "M90", "region": "西南地区"}, {"brand": "兖矿鲁南", "price_date": "2026/04/29", "price_avg": 12200.0, "price_text": "12200", "remark": "", "specification": "M90", "region": "华东地区"}, {"brand": "兖矿鲁南", "price_date": "2026/04/29", "price_avg": 12200.0, "price_text": "12200", "remark": "", "specification": "MA90", "region": "华东地区"}, {"brand": "南通大宝理", "price_date": "2026/04/29", "price_avg": 16300.0, "price_text": "16300", "remark": "", "specification": "M90-44", "region": "华东地区"}, {"brand": "唐山中浩", "price_date": "2026/04/29", "price_avg": 12800.0, "price_text": "12800", "remark": "", "specification": "K90-A", "region": "华北地区"}, {"brand": "唐山中浩", "price_date": "2026/04/29", "price_avg": 12600.0, "price_text": "12600", "remark": "", "specification": "K90-1", "region": "华北地区"}, {"brand": "唐山中浩", "price_date": "2026/04/29", "price_avg": 12400.0, "price_text": "12400", "remark": "", "specification": "K90", "region": "华北地区"}, {"brand": "塞拉尼斯", "price_date": "2026/04/29", "price_avg": 13000.0, "price_text": "13000", "remark": "", "specification": "CE66", "region": "国外"}, {"brand": "塞拉尼斯", "price_date": "2026/04/29", "price_avg": 16000.0, "price_text": "16000", "remark": "", "specification": "M90", "region": "国外"}, {"brand": "天津碱厂", "price_date": "2026/04/29", "price_avg": 12600.0, "price_text": "12600", "remark": "", "specification": "MC90", "region": "华北地区"}, {"brand": "巴斯夫中国", "price_date": "2026/04/29", "price_avg": 13000.0, "price_text": "13000", "remark": "", "specification": "N2320-0038", "region": "国外"}, {"brand": "开封龙宇", "price_date": "2026/04/29", "price_avg": 12800.0, "price_text": "12800", "remark": "", "specification": "MC90-01", "region": "华中地区"}, {"brand": "开封龙宇", "price_date": "2026/04/29", "price_avg": 13000.0, "price_text": "13000", "remark": "", "specification": "MC90", "region": "华中地区"}, {"brand": "张家港旭化成", "price_date": "2026/04/29", "price_avg": 15000.0, "price_text": "15000", "remark": "", "specification": "4520", "region": "华东地区"}, {"brand": "新疆国业", "price_date": "2026/04/29", "price_avg": 12000.0, "price_text": "12000", "remark": "", "specification": "M90-1", "region": "西北地区"}, {"brand": "新疆心连心", "price_date": "2026/04/29", "price_avg": 12100.0, "price_text": "12100", "remark": "", "specification": "X90-01", "region": "西北地区"}, {"brand": "新疆心连心", "price_date": "2026/04/29", "price_avg": 12300.0, "price_text": "12300", "remark": "", "specification": "X90", "region": "西北地区"}, {"brand": "杜邦", "price_date": "2026/04/29", "price_avg": 37000.0, "price_text": "37000", "remark": "", "specification": "500P", "region": "国外"}, {"brand": "杜邦", "price_date": "2026/04/29", "price_avg": 45000.0, "price_text": "45000", "remark": "", "specification": "100P", "region": "国外"}, {"brand": "神华宁煤", "price_date": "2026/04/29", "price_avg": 12100.0, "price_text": "12100", "remark": "", "specification": "MC90", "region": "西北地区"}, {"brand": "韩国可隆", "price_date": "2026/04/29", "price_avg": 15000.0, "price_text": "15000", "remark": "", "specification": "K300", "region": "国外"}, {"brand": "韩国工程", "price_date": "2026/04/29", "price_avg": 16000.0, "price_text": "16000", "remark": "", "specification": "F20-03", "region": "国外"}, {"brand": "中油内蒙", "price_date": "2026/04/30", "price_avg": 12800.0, "price_text": "12800", "remark": "", "specification": "M90", "region": "西北地区"}, {"brand": "云天化集团", "price_date": "2026/04/30", "price_avg": 14800.0, "price_text": "14800", "remark": "", "specification": "M270", "region": "西南地区"}, {"brand": "云天化集团", "price_date": "2026/04/30", "price_avg": 14100.0, "price_text": "14100", "remark": "", "specification": "GM90", "region": "西南地区"}, {"brand": "云天化集团", "price_date": "2026/04/30", "price_avg": 14800.0, "price_text": "14800", "remark": "", "specification": "M90", "region": "西南地区"}, {"brand": "兖矿鲁南", "price_date": "2026/04/30", "price_avg": 12200.0, "price_text": "12200", "remark": "", "specification": "M90", "region": "华东地区"}, {"brand": "兖矿鲁南", "price_date": "2026/04/30", "price_avg": 12200.0, "price_text": "12200", "remark": "", "specification": "MA90", "region": "华东地区"}, {"brand": "南通大宝理", "price_date": "2026/04/30", "price_avg": 16300.0, "price_text": "16300", "remark": "", "specification": "M90-44", "region": "华东地区"}, {"brand": "唐山中浩", "price_date": "2026/04/30", "price_avg": 12800.0, "price_text": "12800", "remark": "", "specification": "K90-A", "region": "华北地区"}, {"brand": "唐山中浩", "price_date": "2026/04/30", "price_avg": 12600.0, "price_text": "12600", "remark": "", "specification": "K90-1", "region": "华北地区"}, {"brand": "唐山中浩", "price_date": "2026/04/30", "price_avg": 12400.0, "price_text": "12400", "remark": "", "specification": "K90", "region": "华北地区"}, {"brand": "塞拉尼斯", "price_date": "2026/04/30", "price_avg": 13000.0, "price_text": "13000", "remark": "", "specification": "CE66", "region": "国外"}, {"brand": "塞拉尼斯", "price_date": "2026/04/30", "price_avg": 16000.0, "price_text": "16000", "remark": "", "specification": "M90", "region": "国外"}, {"brand": "天津碱厂", "price_date": "2026/04/30", "price_avg": 12600.0, "price_text": "12600", "remark": "", "specification": "MC90", "region": "华北地区"}, {"brand": "巴斯夫中国", "price_date": "2026/04/30", "price_avg": 13000.0, "price_text": "13000", "remark": "", "specification": "N2320-0038", "region": "国外"}, {"brand": "开封龙宇", "price_date": "2026/04/30", "price_avg": 12800.0, "price_text": "12800", "remark": "", "specification": "MC90-01", "region": "华中地区"}, {"brand": "开封龙宇", "price_date": "2026/04/30", "price_avg": 13000.0, "price_text": "13000", "remark": "", "specification": "MC90", "region": "华中地区"}, {"brand": "张家港旭化成", "price_date": "2026/04/30", "price_avg": 15000.0, "price_text": "15000", "remark": "", "specification": "4520", "region": "华东地区"}, {"brand": "新疆国业", "price_date": "2026/04/30", "price_avg": 12000.0, "price_text": "12000", "remark": "", "specification": "M90-1", "region": "西北地区"}, {"brand": "新疆心连心", "price_date": "2026/04/30", "price_avg": 12100.0, "price_text": "12100", "remark": "", "specification": "X90-01", "region": "西北地区"}, {"brand": "新疆心连心", "price_date": "2026/04/30", "price_avg": 12300.0, "price_text": "12300", "remark": "", "specification": "X90", "region": "西北地区"}, {"brand": "杜邦", "price_date": "2026/04/30", "price_avg": 37000.0, "price_text": "37000", "remark": "", "specification": "500P", "region": "国外"}, {"brand": "杜邦", "price_date": "2026/04/30", "price_avg": 45000.0, "price_text": "45000", "remark": "", "specification": "100P", "region": "国外"}, {"brand": "神华宁煤", "price_date": "2026/04/30", "price_avg": 12100.0, "price_text": "12100", "remark": "", "specification": "MC90", "region": "西北地区"}, {"brand": "韩国可隆", "price_date": "2026/04/30", "price_avg": 15000.0, "price_text": "15000", "remark": "", "specification": "K300", "region": "国外"}, {"brand": "韩国工程", "price_date": "2026/04/30", "price_avg": 16000.0, "price_text": "16000", "remark": "", "specification": "F20-03", "region": "国外"}, {"brand": "中油内蒙", "price_date": "2026/05/06", "price_avg": 12800.0, "price_text": "12800", "remark": "", "specification": "M90", "region": "西北地区"}, {"brand": "云天化集团", "price_date": "2026/05/06", "price_avg": 14800.0, "price_text": "14800", "remark": "", "specification": "M270", "region": "西南地区"}, {"brand": "云天化集团", "price_date": "2026/05/06", "price_avg": 14100.0, "price_text": "14100", "remark": "", "specification": "GM90", "region": "西南地区"}, {"brand": "云天化集团", "price_date": "2026/05/06", "price_avg": 14800.0, "price_text": "14800", "remark": "", "specification": "M90", "region": "西南地区"}, {"brand": "兖矿鲁南", "price_date": "2026/05/06", "price_avg": 12200.0, "price_text": "12200", "remark": "", "specification": "M90", "region": "华东地区"}, {"brand": "兖矿鲁南", "price_date": "2026/05/06", "price_avg": 12200.0, "price_text": "12200", "remark": "", "specification": "MA90", "region": "华东地区"}, {"brand": "南通大宝理", "price_date": "2026/05/06", "price_avg": 17800.0, "price_text": "17800", "remark": "", "specification": "M90-44", "region": "华东地区"}, {"brand": "唐山中浩", "price_date": "2026/05/06", "price_avg": 12800.0, "price_text": "12800", "remark": "", "specification": "K90-A", "region": "华北地区"}, {"brand": "唐山中浩", "price_date": "2026/05/06", "price_avg": 12600.0, "price_text": "12600", "remark": "", "specification": "K90-1", "region": "华北地区"}, {"brand": "唐山中浩", "price_date": "2026/05/06", "price_avg": 12400.0, "price_text": "12400", "remark": "", "specification": "K90", "region": "华北地区"}, {"brand": "塞拉尼斯", "price_date": "2026/05/06", "price_avg": 13000.0, "price_text": "13000", "remark": "", "specification": "CE66", "region": "国外"}, {"brand": "塞拉尼斯", "price_date": "2026/05/06", "price_avg": 16000.0, "price_text": "16000", "remark": "", "specification": "M90", "region": "国外"}, {"brand": "天津碱厂", "price_date": "2026/05/06", "price_avg": 12600.0, "price_text": "12600", "remark": "", "specification": "MC90", "region": "华北地区"}, {"brand": "巴斯夫中国", "price_date": "2026/05/06", "price_avg": 13000.0, "price_text": "13000", "remark": "", "specification": "N2320-0038", "region": "国外"}, {"brand": "开封龙宇", "price_date": "2026/05/06", "price_avg": 12800.0, "price_text": "12800", "remark": "", "specification": "MC90-01", "region": "华中地区"}, {"brand": "开封龙宇", "price_date": "2026/05/06", "price_avg": 13000.0, "price_text": "13000", "remark": "", "specification": "MC90", "region": "华中地区"}, {"brand": "张家港旭化成", "price_date": "2026/05/06", "price_avg": 15000.0, "price_text": "15000", "remark": "", "specification": "4520", "region": "华东地区"}, {"brand": "新疆国业", "price_date": "2026/05/06", "price_avg": 12000.0, "price_text": "12000", "remark": "", "specification": "M90-1", "region": "西北地区"}, {"brand": "新疆心连心", "price_date": "2026/05/06", "price_avg": 12100.0, "price_text": "12100", "remark": "", "specification": "X90-01", "region": "西北地区"}, {"brand": "新疆心连心", "price_date": "2026/05/06", "price_avg": 12300.0, "price_text": "12300", "remark": "", "specification": "X90", "region": "西北地区"}, {"brand": "杜邦", "price_date": "2026/05/06", "price_avg": 37000.0, "price_text": "37000", "remark": "", "specification": "500P", "region": "国外"}, {"brand": "杜邦", "price_date": "2026/05/06", "price_avg": 45000.0, "price_text": "45000", "remark": "", "specification": "100P", "region": "国外"}, {"brand": "神华宁煤", "price_date": "2026/05/06", "price_avg": 12100.0, "price_text": "12100", "remark": "", "specification": "MC90", "region": "西北地区"}, {"brand": "韩国可隆", "price_date": "2026/05/06", "price_avg": 15000.0, "price_text": "15000", "remark": "", "specification": "K300", "region": "国外"}, {"brand": "韩国工程", "price_date": "2026/05/06", "price_avg": 16000.0, "price_text": "16000", "remark": "", "specification": "F20-03", "region": "国外"}, {"brand": "中油内蒙", "price_date": "2026/05/07", "price_avg": 12800.0, "price_text": "12800", "remark": "", "specification": "M90", "region": "西北地区"}, {"brand": "云天化集团", "price_date": "2026/05/07", "price_avg": 14800.0, "price_text": "14800", "remark": "", "specification": "M270", "region": "西南地区"}, {"brand": "云天化集团", "price_date": "2026/05/07", "price_avg": 14100.0, "price_text": "14100", "remark": "", "specification": "GM90", "region": "西南地区"}, {"brand": "云天化集团", "price_date": "2026/05/07", "price_avg": 14800.0, "price_text": "14800", "remark": "", "specification": "M90", "region": "西南地区"}, {"brand": "兖矿鲁南", "price_date": "2026/05/07", "price_avg": 12200.0, "price_text": "12200", "remark": "", "specification": "M90", "region": "华东地区"}, {"brand": "兖矿鲁南", "price_date": "2026/05/07", "price_avg": 12200.0, "price_text": "12200", "remark": "", "specification": "MA90", "region": "华东地区"}, {"brand": "南通大宝理", "price_date": "2026/05/07", "price_avg": 17800.0, "price_text": "17800", "remark": "", "specification": "M90-44", "region": "华东地区"}, {"brand": "唐山中浩", "price_date": "2026/05/07", "price_avg": 12800.0, "price_text": "12800", "remark": "", "specification": "K90-A", "region": "华北地区"}, {"brand": "唐山中浩", "price_date": "2026/05/07", "price_avg": 12600.0, "price_text": "12600", "remark": "", "specification": "K90-1", "region": "华北地区"}, {"brand": "唐山中浩", "price_date": "2026/05/07", "price_avg": 12400.0, "price_text": "12400", "remark": "", "specification": "K90", "region": "华北地区"}, {"brand": "塞拉尼斯", "price_date": "2026/05/07", "price_avg": 13000.0, "price_text": "13000", "remark": "", "specification": "CE66", "region": "国外"}, {"brand": "塞拉尼斯", "price_date": "2026/05/07", "price_avg": 16000.0, "price_text": "16000", "remark": "", "specification": "M90", "region": "国外"}, {"brand": "天津碱厂", "price_date": "2026/05/07", "price_avg": 12600.0, "price_text": "12600", "remark": "", "specification": "MC90", "region": "华北地区"}, {"brand": "巴斯夫中国", "price_date": "2026/05/07", "price_avg": 13000.0, "price_text": "13000", "remark": "", "specification": "N2320-0038", "region": "国外"}, {"brand": "开封龙宇", "price_date": "2026/05/07", "price_avg": 12800.0, "price_text": "12800", "remark": "", "specification": "MC90-01", "region": "华中地区"}, {"brand": "开封龙宇", "price_date": "2026/05/07", "price_avg": 13000.0, "price_text": "13000", "remark": "", "specification": "MC90", "region": "华中地区"}, {"brand": "张家港旭化成", "price_date": "2026/05/07", "price_avg": 15000.0, "price_text": "15000", "remark": "", "specification": "4520", "region": "华东地区"}, {"brand": "新疆国业", "price_date": "2026/05/07", "price_avg": 12000.0, "price_text": "12000", "remark": "", "specification": "M90-1", "region": "西北地区"}, {"brand": "新疆心连心", "price_date": "2026/05/07", "price_avg": 12100.0, "price_text": "12100", "remark": "", "specification": "X90-01", "region": "西北地区"}, {"brand": "新疆心连心", "price_date": "2026/05/07", "price_avg": 12300.0, "price_text": "12300", "remark": "", "specification": "X90", "region": "西北地区"}, {"brand": "杜邦", "price_date": "2026/05/07", "price_avg": 38500.0, "price_text": "38500", "remark": "", "specification": "500P", "region": "国外"}, {"brand": "杜邦", "price_date": "2026/05/07", "price_avg": 46500.0, "price_text": "46500", "remark": "", "specification": "100P", "region": "国外"}, {"brand": "神华宁煤", "price_date": "2026/05/07", "price_avg": 12100.0, "price_text": "12100", "remark": "", "specification": "MC90", "region": "西北地区"}, {"brand": "韩国可隆", "price_date": "2026/05/07", "price_avg": 15000.0, "price_text": "15000", "remark": "", "specification": "K300", "region": "国外"}, {"brand": "韩国工程", "price_date": "2026/05/07", "price_avg": 16000.0, "price_text": "16000", "remark": "", "specification": "F20-03", "region": "国外"}, {"brand": "中油内蒙", "price_date": "2026/05/08", "price_avg": 12800.0, "price_text": "12800", "remark": "", "specification": "M90", "region": "西北地区"}, {"brand": "云天化集团", "price_date": "2026/05/08", "price_avg": 14800.0, "price_text": "14800", "remark": "", "specification": "M270", "region": "西南地区"}, {"brand": "云天化集团", "price_date": "2026/05/08", "price_avg": 14100.0, "price_text": "14100", "remark": "", "specification": "GM90", "region": "西南地区"}, {"brand": "云天化集团", "price_date": "2026/05/08", "price_avg": 14800.0, "price_text": "14800", "remark": "", "specification": "M90", "region": "西南地区"}, {"brand": "兖矿鲁南", "price_date": "2026/05/08", "price_avg": 12200.0, "price_text": "12200", "remark": "", "specification": "M90", "region": "华东地区"}, {"brand": "兖矿鲁南", "price_date": "2026/05/08", "price_avg": 12200.0, "price_text": "12200", "remark": "", "specification": "MA90", "region": "华东地区"}, {"brand": "南通大宝理", "price_date": "2026/05/08", "price_avg": 17800.0, "price_text": "17800", "remark": "", "specification": "M90-44", "region": "华东地区"}, {"brand": "唐山中浩", "price_date": "2026/05/08", "price_avg": 12800.0, "price_text": "12800", "remark": "", "specification": "K90-A", "region": "华北地区"}, {"brand": "唐山中浩", "price_date": "2026/05/08", "price_avg": 12600.0, "price_text": "12600", "remark": "", "specification": "K90-1", "region": "华北地区"}, {"brand": "唐山中浩", "price_date": "2026/05/08", "price_avg": 12400.0, "price_text": "12400", "remark": "", "specification": "K90", "region": "华北地区"}, {"brand": "塞拉尼斯", "price_date": "2026/05/08", "price_avg": 13000.0, "price_text": "13000", "remark": "", "specification": "CE66", "region": "国外"}, {"brand": "塞拉尼斯", "price_date": "2026/05/08", "price_avg": 16000.0, "price_text": "16000", "remark": "", "specification": "M90", "region": "国外"}, {"brand": "天津碱厂", "price_date": "2026/05/08", "price_avg": 12600.0, "price_text": "12600", "remark": "", "specification": "MC90", "region": "华北地区"}, {"brand": "巴斯夫中国", "price_date": "2026/05/08", "price_avg": 13000.0, "price_text": "13000", "remark": "", "specification": "N2320-0038", "region": "国外"}, {"brand": "开封龙宇", "price_date": "2026/05/08", "price_avg": 12800.0, "price_text": "12800", "remark": "", "specification": "MC90-01", "region": "华中地区"}, {"brand": "开封龙宇", "price_date": "2026/05/08", "price_avg": 13000.0, "price_text": "13000", "remark": "", "specification": "MC90", "region": "华中地区"}, {"brand": "张家港旭化成", "price_date": "2026/05/08", "price_avg": 15000.0, "price_text": "15000", "remark": "", "specification": "4520", "region": "华东地区"}, {"brand": "新疆国业", "price_date": "2026/05/08", "price_avg": 12000.0, "price_text": "12000", "remark": "", "specification": "M90-1", "region": "西北地区"}, {"brand": "新疆心连心", "price_date": "2026/05/08", "price_avg": 12100.0, "price_text": "12100", "remark": "", "specification": "X90-01", "region": "西北地区"}, {"brand": "新疆心连心", "price_date": "2026/05/08", "price_avg": 12300.0, "price_text": "12300", "remark": "", "specification": "X90", "region": "西北地区"}, {"brand": "杜邦", "price_date": "2026/05/08", "price_avg": 38500.0, "price_text": "38500", "remark": "", "specification": "500P", "region": "国外"}, {"brand": "杜邦", "price_date": "2026/05/08", "price_avg": 46500.0, "price_text": "46500", "remark": "", "specification": "100P", "region": "国外"}, {"brand": "神华宁煤", "price_date": "2026/05/08", "price_avg": 12100.0, "price_text": "12100", "remark": "", "specification": "MC90", "region": "西北地区"}, {"brand": "韩国可隆", "price_date": "2026/05/08", "price_avg": 15000.0, "price_text": "15000", "remark": "", "specification": "K300", "region": "国外"}, {"brand": "韩国工程", "price_date": "2026/05/08", "price_avg": 16000.0, "price_text": "16000", "remark": "", "specification": "F20-03", "region": "国外"}, {"brand": "中油内蒙", "price_date": "2026/05/09", "price_avg": 12800.0, "price_text": "12800", "remark": "", "specification": "M90", "region": "西北地区"}, {"brand": "云天化集团", "price_date": "2026/05/09", "price_avg": 14800.0, "price_text": "14800", "remark": "", "specification": "M270", "region": "西南地区"}, {"brand": "云天化集团", "price_date": "2026/05/09", "price_avg": 14100.0, "price_text": "14100", "remark": "", "specification": "GM90", "region": "西南地区"}, {"brand": "云天化集团", "price_date": "2026/05/09", "price_avg": 14800.0, "price_text": "14800", "remark": "", "specification": "M90", "region": "西南地区"}, {"brand": "兖矿鲁南", "price_date": "2026/05/09", "price_avg": 12200.0, "price_text": "12200", "remark": "", "specification": "M90", "region": "华东地区"}, {"brand": "兖矿鲁南", "price_date": "2026/05/09", "price_avg": 12200.0, "price_text": "12200", "remark": "", "specification": "MA90", "region": "华东地区"}, {"brand": "南通大宝理", "price_date": "2026/05/09", "price_avg": 17800.0, "price_text": "17800", "remark": "", "specification": "M90-44", "region": "华东地区"}, {"brand": "唐山中浩", "price_date": "2026/05/09", "price_avg": 12800.0, "price_text": "12800", "remark": "", "specification": "K90-A", "region": "华北地区"}, {"brand": "唐山中浩", "price_date": "2026/05/09", "price_avg": 12600.0, "price_text": "12600", "remark": "", "specification": "K90-1", "region": "华北地区"}, {"brand": "唐山中浩", "price_date": "2026/05/09", "price_avg": 12400.0, "price_text": "12400", "remark": "", "specification": "K90", "region": "华北地区"}, {"brand": "塞拉尼斯", "price_date": "2026/05/09", "price_avg": 13000.0, "price_text": "13000", "remark": "", "specification": "CE66", "region": "国外"}, {"brand": "塞拉尼斯", "price_date": "2026/05/09", "price_avg": 16000.0, "price_text": "16000", "remark": "", "specification": "M90", "region": "国外"}, {"brand": "天津碱厂", "price_date": "2026/05/09", "price_avg": 12600.0, "price_text": "12600", "remark": "", "specification": "MC90", "region": "华北地区"}, {"brand": "巴斯夫中国", "price_date": "2026/05/09", "price_avg": 13000.0, "price_text": "13000", "remark": "", "specification": "N2320-0038", "region": "国外"}, {"brand": "开封龙宇", "price_date": "2026/05/09", "price_avg": 12800.0, "price_text": "12800", "remark": "", "specification": "MC90-01", "region": "华中地区"}, {"brand": "开封龙宇", "price_date": "2026/05/09", "price_avg": 13000.0, "price_text": "13000", "remark": "", "specification": "MC90", "region": "华中地区"}, {"brand": "张家港旭化成", "price_date": "2026/05/09", "price_avg": 15000.0, "price_text": "15000", "remark": "", "specification": "4520", "region": "华东地区"}, {"brand": "新疆国业", "price_date": "2026/05/09", "price_avg": 12000.0, "price_text": "12000", "remark": "", "specification": "M90-1", "region": "西北地区"}, {"brand": "新疆心连心", "price_date": "2026/05/09", "price_avg": 12100.0, "price_text": "12100", "remark": "", "specification": "X90-01", "region": "西北地区"}, {"brand": "新疆心连心", "price_date": "2026/05/09", "price_avg": 12300.0, "price_text": "12300", "remark": "", "specification": "X90", "region": "西北地区"}, {"brand": "杜邦", "price_date": "2026/05/09", "price_avg": 38500.0, "price_text": "38500", "remark": "", "specification": "500P", "region": "国外"}, {"brand": "杜邦", "price_date": "2026/05/09", "price_avg": 46500.0, "price_text": "46500", "remark": "", "specification": "100P", "region": "国外"}, {"brand": "神华宁煤", "price_date": "2026/05/09", "price_avg": 12100.0, "price_text": "12100", "remark": "", "specification": "MC90", "region": "西北地区"}, {"brand": "韩国可隆", "price_date": "2026/05/09", "price_avg": 15000.0, "price_text": "15000", "remark": "", "specification": "K300", "region": "国外"}, {"brand": "韩国工程", "price_date": "2026/05/09", "price_avg": 16000.0, "price_text": "16000", "remark": "", "specification": "F20-03", "region": "国外"}, {"brand": "中油内蒙", "price_date": "2026/05/11", "price_avg": 11800.0, "price_text": "11800", "remark": "现汇送到", "specification": "M90", "region": "西北地区"}, {"brand": "云天化集团", "price_date": "2026/05/11", "price_avg": 14800.0, "price_text": "14800", "remark": "现汇送到", "specification": "M270", "region": "西南地区"}, {"brand": "云天化集团", "price_date": "2026/05/11", "price_avg": 14100.0, "price_text": "14100", "remark": "现汇送到", "specification": "GM90", "region": "西南地区"}, {"brand": "云天化集团", "price_date": "2026/05/11", "price_avg": 14800.0, "price_text": "14800", "remark": "现汇送到", "specification": "M90", "region": "西南地区"}, {"brand": "兖矿鲁南", "price_date": "2026/05/11", "price_avg": 12200.0, "price_text": "12200", "remark": "现汇送到", "specification": "M90", "region": "华东地区"}, {"brand": "兖矿鲁南", "price_date": "2026/05/11", "price_avg": 12200.0, "price_text": "12200", "remark": "现汇送到", "specification": "MA90", "region": "华东地区"}, {"brand": "南通大宝理", "price_date": "2026/05/11", "price_avg": 17800.0, "price_text": "17800", "remark": "现金送到", "specification": "M90-44", "region": "华东地区"}, {"brand": "唐山中浩", "price_date": "2026/05/11", "price_avg": 12100.0, "price_text": "12100", "remark": "承兑送到", "specification": "K90-A", "region": "华北地区"}, {"brand": "唐山中浩", "price_date": "2026/05/11", "price_avg": 11900.0, "price_text": "11900", "remark": "承兑送到", "specification": "K90-1", "region": "华北地区"}, {"brand": "唐山中浩", "price_date": "2026/05/11", "price_avg": 11700.0, "price_text": "11700", "remark": "承兑送到", "specification": "K90", "region": "华北地区"}, {"brand": "塞拉尼斯", "price_date": "2026/05/11", "price_avg": 13000.0, "price_text": "13000", "remark": "现金送到", "specification": "CE66", "region": "国外"}, {"brand": "塞拉尼斯", "price_date": "2026/05/11", "price_avg": 16000.0, "price_text": "16000", "remark": "现金送到", "specification": "M90", "region": "国外"}, {"brand": "天津碱厂", "price_date": "2026/05/11", "price_avg": 12600.0, "price_text": "12600", "remark": "现汇送到", "specification": "MC90", "region": "华北地区"}, {"brand": "巴斯夫中国", "price_date": "2026/05/11", "price_avg": 13000.0, "price_text": "13000", "remark": "现金送到", "specification": "N2320-0038", "region": "国外"}, {"brand": "开封龙宇", "price_date": "2026/05/11", "price_avg": 12100.0, "price_text": "12100", "remark": "现汇送到", "specification": "MC90-01", "region": "华中地区"}, {"brand": "开封龙宇", "price_date": "2026/05/11", "price_avg": 12300.0, "price_text": "12300", "remark": "现汇送到", "specification": "MC90", "region": "华中地区"}, {"brand": "张家港旭化成", "price_date": "2026/05/11", "price_avg": 15000.0, "price_text": "15000", "remark": "现金送到", "specification": "4520", "region": "华东地区"}, {"brand": "新疆国业", "price_date": "2026/05/11", "price_avg": 12000.0, "price_text": "12000", "remark": "现汇送到", "specification": "M90-1", "region": "西北地区"}, {"brand": "新疆心连心", "price_date": "2026/05/11", "price_avg": 12100.0, "price_text": "12100", "remark": "现汇送到", "specification": "X90-01", "region": "西北地区"}, {"brand": "新疆心连心", "price_date": "2026/05/11", "price_avg": 12300.0, "price_text": "12300", "remark": "现汇送到", "specification": "X90", "region": "西北地区"}, {"brand": "杜邦", "price_date": "2026/05/11", "price_avg": 38500.0, "price_text": "38500", "remark": "现金送到", "specification": "500P", "region": "国外"}, {"brand": "杜邦", "price_date": "2026/05/11", "price_avg": 46500.0, "price_text": "46500", "remark": "现金送到", "specification": "100P", "region": "国外"}, {"brand": "神华宁煤", "price_date": "2026/05/11", "price_avg": 11400.0, "price_text": "11400", "remark": "现汇自提", "specification": "MC90", "region": "西北地区"}, {"brand": "韩国可隆", "price_date": "2026/05/11", "price_avg": 15000.0, "price_text": "15000", "remark": "现金送到", "specification": "K300", "region": "国外"}, {"brand": "韩国工程", "price_date": "2026/05/11", "price_avg": 16000.0, "price_text": "16000", "remark": "现金送到", "specification": "F20-03", "region": "国外"}], "dates": ["2026/04/28", "2026/04/29", "2026/04/30", "2026/05/06", "2026/05/07", "2026/05/08", "2026/05/09", "2026/05/11"], "specifications": ["100P", "4520", "500P", "CE66", "F20-03", "GM90", "K300", "K90", "K90-1", "K90-A", "M270", "M90", "M90-1", "M90-44", "MA90", "MC90", "MC90-01", "N2320-0038", "X90", "X90-01"], "spec_brands": {"100P": ["杜邦"], "4520": ["张家港旭化成"], "500P": ["杜邦"], "CE66": ["塞拉尼斯"], "F20-03": ["韩国工程"], "GM90": ["云天化集团"], "K300": ["韩国可隆"], "K90": ["唐山中浩"], "K90-1": ["唐山中浩"], "K90-A": ["唐山中浩"], "M270": ["云天化集团"], "M90": ["中油内蒙", "云天化集团", "兖矿鲁南", "塞拉尼斯"], "M90-1": ["新疆国业"], "M90-44": ["南通大宝理"], "MA90": ["兖矿鲁南"], "MC90": ["天津碱厂", "开封龙宇", "神华宁煤"], "MC90-01": ["开封龙宇"], "N2320-0038": ["巴斯夫中国"], "X90": ["新疆心连心"], "X90-01": ["新疆心连心"]}, "news": [{"title": "2026年中国聚甲醛行业供需现状、市场规模及前景展望", "url": "https://www.toutiao.com/article/7600625889033994802", "source": "今日头条", "scraped_at": "2026-05-12 00:15:56"}, {"title": "2026年中国聚甲醛行业产业链、进出口现状及竞争格局分析", "url": "https://www.toutiao.com/article/7600626353523737138", "source": "今日头条", "scraped_at": "2026-05-12 00:15:56"}, {"title": "中国聚甲醛行业市场运行动态及投资前景预测报告", "url": "https://www.toutiao.com/article/7411029314491220507", "source": "今日头条", "scraped_at": "2026-05-12 00:15:56"}, {"title": "2025深圳橡塑展:聚甲醛POM行业新动向一览", "url": "https://m.sohu.com/a/883530260_122006510", "source": "搜狐", "scraped_at": "2026-05-12 00:15:56"}, {"title": "利华益8万吨/年聚甲醛项目环评获批，国内POM总产能将破92万吨", "url": "https://m.sohu.com/a/873217926_122006510", "source": "搜狐", "scraped_at": "2026-05-12 00:15:56"}, {"title": "POM供应收紧单月涨超10% 云天化透露\"现存货不多但无扩产计划\"", "url": "https://www.toutiao.com/article/7264946043995931195", "source": "今日头条", "scraped_at": "2026-05-12 00:15:56"}, {"title": "POM 生产技术及改性研究进展", "url": "https://www.toutiao.com/article/7200926067107070468", "source": "今日头条", "scraped_at": "2026-05-12 00:15:56"}, {"title": "4月1日起，每吨涨600美元!拟建的百万吨聚甲醛能否解高端需求之困?", "url": "https://www.toutiao.com/article/7080756909938311693", "source": "今日头条", "scraped_at": "2026-05-12 00:15:56"}, {"title": "2024年全球聚甲醛行业发展现状分析 中国聚甲醛总体产能位居全球第一", "url": "https://finance.sina.com.cn/roll/2024-03-06/doc-inamkitk8788674.shtml", "source": "新浪财经", "scraped_at": "2026-05-12 00:15:56"}, {"title": "590亿元大型化工项目关键装置封顶!涉及EVA、PVA、POM", "url": "https://finance.sina.com.cn/roll/2025-08-12/doc-infksvhf8924810.shtml", "source": "新浪财经", "scraped_at": "2026-05-12 00:15:56"}], "generated_at": "2026-05-12 00:15"};
-var COLORS=['#1a73e8','#e53935','#43a047','#fb8c00','#8e24aa','#00acc1','#f06292','#7cb342','#5c6bc0','#26a69a','#ff7043','#5d4037'];
-var echartsLoaded=(typeof echarts!=='undefined');
 
-var currentSpec='';
-var currentMarket='';  // 当前市场分类: low/mid/high
-var currentRegion='';  // 当前区域筛选
-var selectedBrands={};
-var trendChart=null;
-var compareChart=null;
-var tableData=[];  // 表格数据缓存
-var tableSort={field:'',asc:true};  // 排序状态
+    <script>
+        // 价格趋势图表
+        var trendChart = echarts.init(document.getElementById('trend-chart'));
 
-// 初始化：为每个规格默认选中所有企业
-DATA.specifications.forEach(function(spec){
-  selectedBrands[spec]=DATA.spec_brands[spec]?DATA.spec_brands[spec].slice():[];
-});
+        var trendOption = {
+            backgroundColor: 'rgba(0, 0, 0, 0)',
+            tooltip: {
+                trigger: 'axis',
+                backgroundColor: 'rgba(26, 26, 46, 0.95)',
+                borderColor: '#00d4ff',
+                borderWidth: 1,
+                textStyle: { color: '#e0e0e0' },
+                formatter: function(params) {
+                    var data = params[0];
+                    return '<div style="font-weight: 600;">' + data.name + '</div>' +
+                           '<div style="color: #00ff88; font-size: 18px; margin-top: 5px;">' +
+                           '均价: ¥' + data.value.toLocaleString() + '</div>';
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '15%',
+                top: '8%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'category',
+                data: ["2026-04-28", "2026-04-29", "2026-04-30", "2026-05-06", "2026-05-07", "2026-05-08", "2026-05-09", "2026-05-11", "2026-05-12"],
+                axisLine: { lineStyle: { color: '#333' } },
+                axisLabel: {
+                    color: '#888',
+                    interval: 0,
+                    rotate: 45,
+                    fontSize: 11
+                },
+                axisTick: { show: false }
+            },
+            yAxis: {
+                type: 'value',
+                name: '价格 (元/吨)',
+                nameTextStyle: { color: '#888', fontSize: 12 },
+                axisLine: { show: false },
+                axisLabel: {
+                    color: '#888',
+                    interval: 250,
+                    formatter: function(value) {
+                        return value.toLocaleString();
+                    }
+                },
+                splitLine: {
+                    lineStyle: { color: 'rgba(255, 255, 255, 0.1)' }
+                },
+                min: 'dataMin',
+                max: 'dataMax'
+            },
+            series: [{
+                name: '市场均价',
+                type: 'line',
+                smooth: true,
+                symbol: 'circle',
+                symbolSize: 10,
+                lineStyle: {
+                    color: '#00d4ff',
+                    width: 3,
+                    shadowColor: 'rgba(0, 212, 255, 0.5)',
+                    shadowBlur: 10
+                },
+                itemStyle: {
+                    color: '#00d4ff',
+                    borderColor: '#fff',
+                    borderWidth: 2,
+                    shadowColor: 'rgba(0, 212, 255, 0.5)',
+                    shadowBlur: 10
+                },
+                areaStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: 'rgba(0, 212, 255, 0.3)' },
+                        { offset: 1, color: 'rgba(0, 212, 255, 0.02)' }
+                    ])
+                },
+                data: [13410.0, 15676.0, 15676.0, 15736.0, 15856.0, 15856.0, 15856.0, 15648.0, 15536.0],
+                animationDuration: 2000,
+                animationEasing: 'cubicInOut'
+            }]
+        };
 
-function getPrevPrice(brand,spec){
-  if(DATA.dates.length<2)return null;
-  var prevDate=DATA.dates[DATA.dates.length-2];
-  var item=DATA.trend.find(function(d){return d.brand===brand&&d.specification===spec&&d.price_date===prevDate;});
-  return item?item.price_avg:null;
-}
+        trendChart.setOption(trendOption);
 
-function renderChange(cur,prev){
-  if(prev===null||cur===null)return '<span class="badge badge-flat">--</span>';
-  var diff=cur-prev;
-  if(diff>0)return '<span class="badge badge-up">+'+diff.toLocaleString()+'</span>';
-  if(diff<0)return '<span class="badge badge-down">'+diff.toLocaleString()+'</span>';
-  return '<span class="badge badge-flat">持平</span>';
-}
+        // 企业价格对比图表
+        var brandChart = echarts.init(document.getElementById('brand-chart'));
 
-// 渲染区域按钮
-function renderRegionBar(){
-  // 获取当前筛选下的区域列表
-  var regions=[];
-  var market=currentMarket;
-  DATA.latest.forEach(function(d){
-    if(market){
-      if(market==='low'&&d.price_avg>=13000)return;
-      if(market==='mid'&&(d.price_avg<13000||d.price_avg>=16000))return;
-      if(market==='high'&&d.price_avg<16000)return;
-    }
-    if(regions.indexOf(d.region)===-1)regions.push(d.region);
-  });
-  regions.sort();
-  
-  var html='<button class="tab-btn '+(currentRegion===''?'active':'')+'" onclick="switchRegion(\'\')">&#x1F30D; 全部</button>';
-  regions.forEach(function(r){
-    var count=DATA.latest.filter(function(d){
-      if(currentMarket){
-        if(currentMarket==='low'&&d.price_avg>=13000)return false;
-        if(currentMarket==='mid'&&(d.price_avg<13000||d.price_avg>=16000))return false;
-        if(currentMarket==='high'&&d.price_avg<16000)return false;
-      }
-      return d.region===r;
-    }).length;
-    var active=currentRegion===r?'active':'';
-    html+='<button class="tab-btn '+active+'" onclick="switchRegion(\''+r+'\')">'+r+' <span class="count">'+count+'</span></button>';
-  });
-  document.getElementById('regionBar').innerHTML=html;
-}
+        var brandOption = {
+            backgroundColor: 'rgba(0, 0, 0, 0)',
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'shadow' },
+                backgroundColor: 'rgba(26, 26, 46, 0.95)',
+                borderColor: '#00d4ff',
+                borderWidth: 1,
+                textStyle: { color: '#e0e0e0' },
+                formatter: function(params) {
+                    var data = params[0];
+                    return '<div style="font-weight: 600;">' + data.name + '</div>' +
+                           '<div style="color: #00ff88; font-size: 18px; margin-top: 5px;">' +
+                           '¥' + data.value.toLocaleString() + ' 元/吨</div>';
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                top: '3%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'value',
+                name: '价格 (元/吨)',
+                nameTextStyle: { color: '#888', fontSize: 12 },
+                axisLine: { show: false },
+                axisLabel: {
+                    color: '#888',
+                    interval: 250,
+                    formatter: function(value) {
+                        return value.toLocaleString();
+                    }
+                },
+                splitLine: {
+                    lineStyle: { color: 'rgba(255, 255, 255, 0.1)' }
+                },
+                min: 'dataMin',
+                max: 'dataMax'
+            },
+            yAxis: {
+                type: 'category',
+                data: ["杜邦", "杜邦", "南通大宝理", "塞拉尼斯", "韩国工程", "张家港旭化成", "韩国可隆", "云天化集团", "云天化集团", "云天化集团", "塞拉尼斯", "巴斯夫中国", "开封龙宇", "新疆心连心", "兖矿鲁南", "兖矿鲁南", "唐山中浩", "开封龙宇", "新疆心连心", "新疆国业", "唐山中浩", "天津碱厂", "中油内蒙", "唐山中浩", "神华宁煤"],
+                axisLine: { lineStyle: { color: '#333' } },
+                axisLabel: {
+                    color: '#e0e0e0',
+                    fontSize: 11
+                },
+                axisTick: { show: false }
+            },
+            series: [{
+                name: '最新价格',
+                type: 'bar',
+                barWidth: '60%',
+                itemStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                        { offset: 0, color: '#00d4ff' },
+                        { offset: 1, color: '#00ff88' }
+                    ]),
+                    borderRadius: [0, 4, 4, 0]
+                },
+                data: [46500.0, 38500.0, 17800.0, 16000.0, 16000.0, 15000.0, 15000.0, 14100.0, 14100.0, 13400.0, 13000.0, 13000.0, 12300.0, 12300.0, 12200.0, 12200.0, 12100.0, 12100.0, 12100.0, 12000.0, 11900.0, 11900.0, 11800.0, 11700.0, 11400.0],
+                animationDuration: 1500,
+                animationEasing: 'elasticOut',
+                animationDelay: function(idx) {
+                    return idx * 50;
+                }
+            }]
+        };
 
-// 切换区域
-function switchRegion(region){
-  currentRegion=region;
-  renderRegionBar();
-  renderTabs();
-  renderBrandSelector();
-  render();
-}
+        brandChart.setOption(brandOption);
 
-// 渲染规格Tab（根据市场分类过滤）
-function renderTabs(){
-  var market=currentMarket;
-  var specs=[];
-  DATA.specifications.forEach(function(spec){
-    var products=DATA.latest.filter(function(d){return d.specification===spec;});
-    if(!products.length)return;
-    var avgPrice=products.reduce(function(s,d){return s+d.price_avg;},0)/products.length;
-    // 根据市场分类过滤
-    if(market){
-      if(market==='low'&&avgPrice>=13000)return;
-      if(market==='mid'&&(avgPrice<13000||avgPrice>=16000))return;
-      if(market==='high'&&avgPrice<16000)return;
-    }
-    specs.push({spec:spec,count:products.length,price:avgPrice});
-  });
-  // 按价格排序
-  specs.sort(function(a,b){return a.price-b.price;});
-  
-  var html='';
-  if(!specs.length){
-    html='<span style="color:#aaa;font-size:13px">该分类暂无规格</span>';
-  }
-  specs.forEach(function(s){
-    var active=currentSpec===s.spec?'active':'';
-    html+='<button class="tab-btn '+active+'" onclick="switchSpec(\''+s.spec+'\')">'+s.spec+' <span class="count">'+s.count+'</span></button>';
-  });
-  document.getElementById('tabBar').innerHTML=html;
-}
-
-// 切换市场分类
-function switchMarket(level){
-  currentSpec='';
-  currentMarket=level;
-  currentRegion='';  // 重置区域
-  // 更新市场选择器样式
-  document.querySelectorAll('#marketSelector .tab-btn').forEach(function(btn){
-    btn.classList.remove('active');
-    if((level==='low'&&btn.textContent.indexOf('低端')!==-1)||
-       (level==='mid'&&btn.textContent.indexOf('中端')!==-1)||
-       (level==='high'&&btn.textContent.indexOf('高端')!==-1)){
-      btn.classList.add('active');
-    }
-  });
-  // 重新渲染区域和规格列表
-  renderRegionBar();
-  renderTabs();
-  renderBrandSelector();
-  render();
-}
-
-// 切换规格
-function switchSpec(spec){
-  currentSpec=spec;
-  currentMarket='';
-  currentRegion='';
-  // 更新市场选择器样式
-  document.querySelectorAll('#marketSelector .tab-btn').forEach(function(btn){
-    btn.classList.toggle('active',btn.textContent.indexOf('全部')!==-1);
-  });
-  // 重新渲染区域和规格列表
-  renderRegionBar();
-  renderTabs();
-  renderBrandSelector();
-  render();
-}
-
-// 渲染企业选择器
-function renderBrandSelector(){
-  var container=document.getElementById('brandSelector');
-  var key=currentSpec||'_all';
-  // 获取当前规格下各企业的产品列表
-  var filteredTrend=DATA.trend.filter(function(d){return !currentSpec||d.specification===currentSpec;});
-  var brandSpecs={};
-  filteredTrend.forEach(function(d){
-    if(!brandSpecs[d.brand])brandSpecs[d.brand]=[];
-    if(brandSpecs[d.brand].indexOf(d.specification)===-1)brandSpecs[d.brand].push(d.specification);
-  });
-  
-  var brands=Object.keys(brandSpecs).sort();
-  if(!brands.length){container.innerHTML='<span style="color:#888">暂无数据</span>';return;}
-  
-  var html='';
-  brands.forEach(function(brand,i){
-    var specs=brandSpecs[brand].join(',');
-    var checked=selectedBrands[key]&&selectedBrands[key].indexOf(brand)!==-1;
-    html+='<label class="brand-chk '+(checked?'checked':'')+'" onclick="toggleBrand(\''+brand+'\')">'+
-          '<span class="dot" style="background:'+COLORS[i%COLORS.length]+'"></span>'+
-          '<span>'+brand+'<span style="color:#888;font-size:10px">('+specs+')</span></span></label>';
-  });
-  html+='<label class="brand-chk" onclick="toggleAllBrands()" style="margin-left:8px;color:#888">全选/反选</label>';
-  container.innerHTML=html;
-}
-
-function getUniqueBrands(){
-  var brands=[];
-  DATA.trend.forEach(function(d){if(brands.indexOf(d.brand)===-1)brands.push(d.brand);});
-  return brands;
-}
-
-// 切换行业信息展开/收起
-function toggleInfo(){
-  var content=document.getElementById('infoContent');
-  var toggle=document.getElementById('infoToggle');
-  content.classList.toggle('collapsed');
-  toggle.classList.toggle('collapsed');
-}
-
-// 渲染新闻列表
-function renderNews(){
-  var newsList=DATA.news||[];
-  var container=document.getElementById('newsList');
-  var updateTime=document.getElementById('newsUpdateTime');
-  
-  if(!newsList.length){
-    container.innerHTML='<div class="news-item"><span style="color:#888;font-size:12px">暂无新闻数据</span></div>';
-    return;
-  }
-  
-  var html='';
-  newsList.forEach(function(item){
-    html+='<div class="news-item">'+
-          '<div class="news-title"><a href="'+item.url+'" target="_blank">'+item.title+'</a></div>'+
-          '<div class="news-meta"><span class="news-source">'+item.source+'</span> · '+item.scraped_at+'</div>'+
-          '</div>';
-  });
-  container.innerHTML=html;
-  
-  if(newsList.length>0){
-    updateTime.textContent=newsList[0].scraped_at;
-  }
-}
-
-// 切换新闻展开/收起
-function toggleNews(){
-  var content=document.getElementById('newsContent');
-  var toggle=document.getElementById('newsToggle');
-  content.classList.toggle('collapsed');
-  toggle.classList.toggle('collapsed');
-}
-
-// 刷新新闻（提示用户）
-function refreshNews(){
-  alert('新闻数据已嵌入页面，如需最新新闻请运行 scrape_pom_news.py 脚本');
-}
-
-function toggleBrand(brand){
-  var key=currentSpec||'_all';
-  if(!selectedBrands[key])selectedBrands[key]=[];
-  var idx=selectedBrands[key].indexOf(brand);
-  if(idx===-1)selectedBrands[key].push(brand);
-  else selectedBrands[key].splice(idx,1);
-  renderBrandSelector();
-  renderTrendChart();
-}
-
-function toggleAllBrands(){
-  var key=currentSpec||'_all';
-  var brands=currentSpec===''?getUniqueBrands():DATA.spec_brands[currentSpec];
-  if(selectedBrands[key]&&selectedBrands[key].length===brands.length){
-    selectedBrands[key]=[];
-  }else{
-    selectedBrands[key]=brands.slice();
-  }
-  renderBrandSelector();
-  renderTrendChart();
-}
-
-// 主渲染函数
-function render(){
-  var spec=currentSpec;
-  var market=currentMarket;
-  var region=currentRegion;
-  var filtered=DATA.latest.filter(function(d){
-    if(spec&&d.specification!==spec)return false;
-    if(region&&d.region!==region)return false;
-    if(market){
-      if(market==='low'&&d.price_avg>=13000)return false;
-      if(market==='mid'&&(d.price_avg<13000||d.price_avg>=16000))return false;
-      if(market==='high'&&d.price_avg<16000)return false;
-    }
-    return true;
-  });
-  var filteredTrend=DATA.trend.filter(function(d){
-    if(spec&&d.specification!==spec)return false;
-    if(region&&d.region!==region)return false;
-    if(market){
-      if(market==='low'&&d.price_avg>=13000)return false;
-      if(market==='mid'&&(d.price_avg<13000||d.price_avg>=16000))return false;
-      if(market==='high'&&d.price_avg<16000)return false;
-    }
-    return true;
-  });
-  var brands=[];filteredTrend.forEach(function(d){if(brands.indexOf(d.brand)===-1)brands.push(d.brand);});
-  var prices=filtered.map(function(d){return d.price_avg;}).filter(function(p){return p>100;});
-  var minP=prices.length?Math.min.apply(null,prices):0;
-  var maxP=prices.length?Math.max.apply(null,prices):0;
-  var minItem=filtered.find(function(d){return d.price_avg===minP;});
-  var maxItem=filtered.find(function(d){return d.price_avg===maxP;});
-
-  // 计算涨跌
-  var totalChange=0,changeCount=0;
-  filtered.forEach(function(d){
-    var prev=getPrevPrice(d.brand,d.specification);
-    if(prev!==null&&d.price_avg>100){totalChange+=(d.price_avg-prev)/prev*100;changeCount++;}
-  });
-  var avgChange=changeCount?(totalChange/changeCount).toFixed(1):0;
-  var changeClass=avgChange>0?'up':avgChange<0?'down':'';
-  var changeSign=avgChange>0?'+':'';
-
-  // 渲染卡片
-  document.getElementById('cards').innerHTML=
-    '<div class="card"><div class="label">&#x1F4C5; 数据日期</div><div class="value">'+(DATA.dates[DATA.dates.length-1]||'--')+'</div></div>'+
-    '<div class="card"><div class="label">&#x1F4B0; 最低</div><div class="value">'+(minP?minP.toLocaleString():'--')+'</div><div class="sub">'+(minItem?minItem.brand:'')+'</div></div>'+
-    '<div class="card"><div class="label">&#x1F4B2; 最高</div><div class="value">'+(maxP?maxP.toLocaleString():'--')+'</div><div class="sub">'+(maxItem?maxItem.brand:'')+'</div></div>'+
-    '<div class="card"><div class="label">&#x1F4C9; 平均涨跌</div><div class="value '+changeClass+'">'+changeSign+avgChange+'%</div></div>'+
-    '<div class="card"><div class="label">&#x1F3ED; 企业数</div><div class="value">'+brands.length+'</div><div class="sub">'+(spec||'全部')+'</div></div>';
-
-  document.getElementById('metaInfo').textContent='生成: '+DATA.generated_at+' | 周期: '+(DATA.dates[0]||'')+' ~ '+(DATA.dates[DATA.dates.length-1]||'');
-
-  if(echartsLoaded){
-    renderTrendChart();
-    renderCompareChart(filtered,minP,maxP);
-  }
-  renderMarketSegments(filtered);
-  renderTable(filtered,minP,maxP);
-}
-
-// 渲染主走势图
-function renderTrendChart(){
-  var key=currentSpec||'_all';
-  var selected=selectedBrands[key]||[];
-  var market=currentMarket;
-  var region=currentRegion;
-  
-  // 根据规格、市场分类和区域过滤
-  var filteredTrend=DATA.trend.filter(function(d){
-    // 规格过滤
-    if(currentSpec&&d.specification!==currentSpec)return false;
-    // 区域过滤
-    if(region&&d.region!==region)return false;
-    // 市场分类过滤
-    if(market){
-      if(market==='low'&&d.price_avg>=13000)return false;
-      if(market==='mid'&&(d.price_avg<13000||d.price_avg>=16000))return false;
-      if(market==='high'&&d.price_avg<16000)return false;
-    }
-    return true;
-  });
-  
-  // 按 品牌+规格 组合生成独立曲线
-  var combos=[];
-  filteredTrend.forEach(function(d){
-    var name=d.brand+'('+d.specification+')';
-    if(combos.indexOf(name)===-1)combos.push(name);
-  });
-  combos.sort();
-  
-  // 根据勾选过滤
-  var activeCombos=combos.filter(function(c){
-    if(!selected.length)return true;
-    return selected.some(function(b){return c.indexOf(b)===0;});
-  });
-  
-  if(!trendChart)trendChart=echarts.init(document.getElementById('trendChart'));
-  
-  var series=activeCombos.map(function(combo,i){
-    // 解析品牌和规格
-    var m=combo.match(/^(.+)\((.+)\)$/);
-    var brand=m?m[1]:combo;
-    var spec=m?m[2]:'';
-    var bd=filteredTrend.filter(function(d){return d.brand===brand&&d.specification===spec;});
-    return{
-      name:combo,
-      type:'line',
-      smooth:true,
-      symbol:'circle',
-      symbolSize:5,
-      lineStyle:{width:2},
-      itemStyle:{color:COLORS[i%COLORS.length]},
-      emphasis:{lineStyle:{width:4}},
-      data:DATA.dates.map(function(date){
-        var item=bd.find(function(d){return d.price_date===date;});
-        return item&&item.price_avg>100?item.price_avg:null;
-      })
-    };
-  });
-  
-  trendChart.setOption({
-    tooltip:{trigger:'axis',formatter:function(p){
-      var h='<b>'+p[0].axisValue+'</b><br/>';
-      p.forEach(function(x){if(x.value!=null)h+=x.marker+' '+x.seriesName+': <b>'+x.value.toLocaleString()+'</b> 元/吨<br/>';});
-      return h;
-    }},
-    legend:{data:activeCombos,top:0,type:'scroll',itemWidth:12,itemHeight:8,textStyle:{fontSize:10}},
-    grid:{left:50,right:15,top:50,bottom:60},
-    xAxis:{type:'category',data:DATA.dates,axisLabel:{fontSize:11,interval:0,rotate:45}},
-    yAxis:{
-      type:'value',
-      name:'元/吨',
-      nameTextStyle:{fontSize:11},
-      axisLabel:{fontSize:11,interval:0,rotate:45},
-      min:function(value){return Math.floor((value.min-200)/250)*250;},
-      max:function(value){return Math.ceil((value.max+200)/250)*250;}
-    },
-    series:series
-  },true);
-}
-
-// 渲染对比图
-function renderCompareChart(filtered,minP,maxP){
-  if(!compareChart)compareChart=echarts.init(document.getElementById('compareChart'));
-  var valid=filtered.filter(function(d){return d.price_avg>100;});
-  // 按价格排序，方便对比
-  valid.sort(function(a,b){return a.price_avg-b.price_avg;});
-  var labels=valid.map(function(d){return d.brand+'\n('+d.specification+')';});
-  var values=valid.map(function(d){return d.price_avg;});
-  var vMin=values.length?Math.min.apply(null,values):0;
-  var vMax=values.length?Math.max.apply(null,values):0;
-  
-  compareChart.setOption({
-    tooltip:{trigger:'axis',formatter:function(p){
-      var name=p[0].name.replace('\n',' ');
-      return name+'<br/><b>'+p[0].value.toLocaleString()+'</b> 元/吨';
-    }},
-    grid:{left:40,right:20,top:30,bottom:80},
-    xAxis:{
-      type:'category',
-      data:labels,
-      axisLabel:{
-        fontSize:10,
-        interval:0,
-        rotate:45,
-        formatter:function(v){return v.replace('\n',' ');}
-      }
-    },
-    yAxis:{type:'value',name:'元/吨',nameTextStyle:{fontSize:10},axisLabel:{fontSize:10}},
-    series:[{
-      type:'bar',
-      data:values.map(function(v){
-        var c=v===vMin?'#43a047':v===vMax?'#e53935':'#1a73e8';
-        return{value:v,itemStyle:{color:c,borderRadius:[4,4,0,0]}};
-      }),
-      barWidth:'60%',
-      label:{show:true,position:'top',formatter:function(p){return p.value.toLocaleString();},fontSize:9,fontWeight:'bold'}
-    }]
-  },true);
-}
-
-// 渲染市场分类
-function renderMarketSegments(filtered){
-  var low=[],mid=[],high=[];
-  filtered.forEach(function(d){
-    var item={spec:d.specification,brand:d.brand,price:d.price_avg};
-    if(d.price_avg<13000)low.push(item);
-    else if(d.price_avg<16000)mid.push(item);
-    else high.push(item);
-  });
-  
-  // 按价格排序
-  low.sort(function(a,b){return a.price-b.price;});
-  mid.sort(function(a,b){return a.price-b.price;});
-  high.sort(function(a,b){return a.price-b.price;});
-  
-  function renderList(arr){
-    return arr.map(function(d){
-      return '<div class="market-item"><span class="name">'+d.brand+'('+d.spec+')</span><span class="price">'+d.price.toLocaleString()+'</span></div>';
-    }).join('');
-  }
-  
-  document.getElementById('marketLow').innerHTML=renderList(low);
-  document.getElementById('marketMid').innerHTML=renderList(mid);
-  document.getElementById('marketHigh').innerHTML=renderList(high);
-}
-
-// 渲染表格（含筛选排序）
-function renderTable(filtered,minP,maxP){
-  if(!filtered.length){document.getElementById('tableBody').innerHTML='<tr><td colspan="7" style="text-align:center;color:#aaa;padding:30px">暂无数据</td></tr>';return;}
-  
-  // 构建表格数据（带涨跌计算）
-  tableData=filtered.map(function(r){
-    var prev=getPrevPrice(r.brand,r.specification);
-    var change=prev!==null?r.price_avg-prev:0;
-    var changeType=change>0?'up':change<0?'down':'flat';
-    return{specification:r.specification,brand:r.brand,region:r.region,price_avg:r.price_avg,change:change,changeType:changeType,price_date:r.price_date,remark:r.remark||'-'};
-  });
-  
-  // 初始化地区筛选器
-  initRegionFilter(tableData);
-  
-  // 应用筛选和排序
-  applyTableFilter();
-}
-
-function initRegionFilter(data){
-  var regions=[];
-  data.forEach(function(d){if(regions.indexOf(d.region)===-1&&d.region)regions.push(d.region);});
-  regions.sort();
-  var sel=document.getElementById('regionFilter');
-  var current=sel.value;
-  sel.innerHTML='<option value="">全部地区</option>';
-  regions.forEach(function(r){sel.innerHTML+='<option value="'+r+'">'+r+'</option>';});
-  sel.value=current;
-}
-
-function filterTable(){
-  applyTableFilter();
-}
-
-function applyTableFilter(){
-  var search=(document.getElementById('tableSearch').value||'').toLowerCase();
-  var region=document.getElementById('regionFilter').value;
-  var priceF=document.getElementById('priceFilter').value;
-  
-  var filtered=tableData.filter(function(d){
-    if(search&&d.brand.toLowerCase().indexOf(search)===-1&&d.specification.toLowerCase().indexOf(search)===-1&&d.region.toLowerCase().indexOf(search)===-1)return false;
-    if(region&&d.region!==region)return false;
-    if(priceF==='up'&&d.changeType!=='up')return false;
-    if(priceF==='down'&&d.changeType!=='down')return false;
-    if(priceF==='flat'&&d.changeType!=='flat')return false;
-    return true;
-  });
-  
-  // 排序
-  if(tableSort.field){
-    filtered.sort(function(a,b){
-      var va=a[tableSort.field],vb=b[tableSort.field];
-      if(typeof va==='string')va=va.toLowerCase();
-      if(typeof vb==='string')vb=vb.toLowerCase();
-      if(va<vb)return tableSort.asc?-1:1;
-      if(va>vb)return tableSort.asc?1:-1;
-      return 0;
-    });
-  }
-  
-  // 计算价格范围
-  var prices=tableData.map(function(d){return d.price_avg;}).filter(function(p){return p>100;});
-  var minP=prices.length?Math.min.apply(null,prices):0;
-  var maxP=prices.length?Math.max.apply(null,prices):0;
-  
-  // 渲染
-   var tbody=document.getElementById('tableBody');
-   if(!filtered.length){
-     tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#aaa;padding:20px">无匹配结果</td></tr>';
-   }else{
-     var html='';
-     filtered.forEach(function(r){
-       // 价格样式：最低绿、最高红
-       var priceCls='price-cell ';
-       if(r.price_avg===minP)priceCls+='price-lowest';
-       else if(r.price_avg===maxP)priceCls+='price-highest';
-       else priceCls+='price-stable';
-       
-       // 涨跌徽章
-       var changeHtml=r.changeType==='up'?'<span class="badge badge-up">+'+r.change+'</span>':
-                      r.changeType==='down'?'<span class="badge badge-down">'+r.change+'</span>':
-                      '<span class="badge badge-flat">持平</span>';
-       
-       // 规格标签
-       var specTag='<span class="spec-tag">'+r.specification+'</span>';
-       
-       // 搜索高亮
-       var hl=search?' highlight':'';
-       
-       html+='<tr class="'+hl+'"><td class="col-brand" title="'+r.brand+'">'+r.brand+'</td>'+
-             '<td class="col-spec">'+specTag+'</td>'+
-             '<td class="col-region">'+r.region+'</td>'+
-             '<td class="col-price '+priceCls+'">'+r.price_avg.toLocaleString()+'</td>'+
-             '<td class="col-change">'+changeHtml+'</td>'+
-             '<td class="col-date">'+r.price_date+'</td>'+
-             '<td class="col-remark">'+(r.remark||'-')+'</td></tr>';
-     });
-     tbody.innerHTML=html;
-   }
-  
-  document.getElementById('resultCount').textContent='共 '+filtered.length+' / '+tableData.length+' 条';
-}
-
-function sortTable(field){
-  if(tableSort.field===field){
-    tableSort.asc=!tableSort.asc;
-  }else{
-    tableSort.field=field;
-    tableSort.asc=true;
-  }
-  
-  // 更新排序图标
-  document.querySelectorAll('.sort-icon').forEach(function(el){el.classList.remove('active');});
-  var icon=document.getElementById('sort_'+field);
-  if(icon){
-    icon.classList.add('active');
-    icon.innerHTML=tableSort.asc?'&#x25B2;':'&#x25BE;';
-  }
-  
-  applyTableFilter();
-}
-
-// 窗口大小变化
-window.onresize=function(){
-  if(trendChart)trendChart.resize();
-  if(compareChart)compareChart.resize();
-  DATA.specifications.forEach(function(spec,i){
-    var el=document.getElementById('specChart_'+i);
-    if(el)echarts.getInstanceByDom(el)&&echarts.getInstanceByDom(el).resize();
-  });
-};
-
-// 初始化
-renderRegionBar();
-renderTabs();
-renderBrandSelector();
-renderNews();
-render();
-</script>
+        // 响应式调整
+        window.addEventListener('resize', function() {
+            trendChart.resize();
+            brandChart.resize();
+        });
+    </script>
 </body>
 </html>
